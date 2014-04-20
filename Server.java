@@ -1,6 +1,10 @@
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
-
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -17,47 +21,99 @@ public class Server {
 	public static final int INCREMENT = 1;
 	
 	
-	private static final int SERVER_PORT = 80;
-	
+	private static final int SERVER_PORT = 48567;
 	private static ServerSocket listenSock;
 	
 	private static Logger log;
 	
+	private static Thread acceptThread;
+	private static boolean running = true;
 	
-	private static boolean stop = false;
 	
-	public static void main(String[] args){
-		System.out.println("Starting server...");
-		System.out.println("Retriving user database...");
-		System.out.println("Found " + UserDB.getInstance().getUserCount() + " users in database.");
-		
-		//if there's no users in the database, warn user to add some
-		if (UserDB.getInstance().getUserCount() == 0){
-			System.out.println("Warning! Server has no users registered in database. Add some users to: " + UserDB.DB_FILE_NAME);
+	private static Server instance;
+	
+	public static Server getInstance(){
+		if (instance == null){
+			instance = new Server();
 		}
+		return instance;
+	}
+	
+	
+	private Server(){}
+	
+	
+	/**
+	 * Starts the server, binds all resourc. If an instance has already is or has been
+	 * running, then nothing happens.
+	 */
+	public void runServer(){
 		
-		//create the system log
-		System.out.println("Creating system log...");
-		log = new Logger("log" + logDate() + ".txt");
-		
-		
-		//create the listen socket and start main loop
-		try {
-			listenSock = new ServerSocket(SERVER_PORT);
+		//run only if the current thread is not created. Single instance
+		if (acceptThread == null){
+			System.out.println("Starting server...");
+			System.out.println("Retriving user database...");
+			System.out.println("Found " + UserDB.getInstance().getUserCount() + " users in database.");
+			
+			//if there's no users in the database, warn user to add some
+			if (UserDB.getInstance().getUserCount() == 0){
+				System.out.println("Warning! Server has no users registered in database. Add some users to: " + UserDB.DB_FILE_NAME);
+			}
+			
+			//create the system log
+			System.out.println("Creating system log...");
+			log = new Logger("log" + logDate() + ".txt");
 			
 			
+			//create the listen socket
+			try {
+				listenSock = new ServerSocket(SERVER_PORT);
+				
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			
-			listenSock.accept();
-
-			
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+			//create the handling thread and run it.
+			acceptThread = new Thread(new SocketAccepter());
+			acceptThread.run();
 		}
 	}
 	
 	
+	
+	/**
+	 * The request handler created when a new request is being made.
+	 * @author Kevin
+	 *
+	 */
+	private final class RequestHandler implements Runnable{
+
+		Socket client;
+		
+		public RequestHandler(Socket client){
+			this.client = client;
+		}
+		
+		@Override
+		public void run() {
+			try {
+				BufferedReader buff = new BufferedReader(new InputStreamReader(client.getInputStream(), "UTF-8"));
+				
+				String nextLine = buff.readLine();
+				while (nextLine != null){
+					System.out.println(nextLine);
+					nextLine = buff.readLine();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			
+		}
+		
+	}
 	
 	
 	/**
@@ -66,11 +122,26 @@ public class Server {
 	 * @author Kevin
 	 *
 	 */
-	private class SocketAccepter implements Runnable{
+	private final class SocketAccepter implements Runnable{
 
+		
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
+			
+			while( running == true ){
+				try {
+					Socket client = listenSock.accept();
+					
+					//got a connection
+					System.out.println("Recieved connection from: " + client.getInetAddress().toString() + "@ port: " + client.getPort());
+					
+					//handle request in new thread
+					Thread clientHandler = new Thread(new RequestHandler(client));
+					clientHandler.run();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 			
 		}
 		
@@ -78,20 +149,10 @@ public class Server {
 	
 	
 	/**
-	 * The request handler created when a new request is being made.
-	 * @author Kevin
-	 *
+	 * Gets the current log date and returns a string.
+	 * These strings only differ by day.
+	 * @return
 	 */
-	private class RequestHandler implements Runnable{
-
-		@Override
-		public void run() {
-			// TODO Auto-generated method stub
-			
-		}
-		
-	}
-	
 	private static String logDate(){
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 		return formatter.format(new Date(System.currentTimeMillis()));
