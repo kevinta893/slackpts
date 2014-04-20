@@ -18,6 +18,15 @@ public class Server {
 	public static final String PTS_NAME = "peeg";
 	public static final int INCREMENT = 1;
 	
+	public static final String CMD_TAG = "command=";
+	public static final String TEXT_TAG = "text=";
+	public static final String CHANNEL_NAME_TAG = "channel_name=";
+	public static final String USER_NAME_TAG = "user_name=";
+	public static final String USER_ID_TAG = "user_id=";
+	
+	public static final String INCREMENT_CMD = "%2Ftip";
+	public static final String CHECK_CMD = "%2Fcheck";
+	
 	
 	private static final int DEFAULT_PORT = 48567;
 	private static ServerSocket listenSock;
@@ -56,7 +65,7 @@ public class Server {
 		
 		//run only if the current thread is not created. Single instance
 		if (acceptThread == null){
-			System.out.println("Starting server on port " + port + "...");
+			
 			System.out.println("Retriving user database...");
 			System.out.println("Found " + UserDB.getInstance().getUserCount() + " users in database.");
 			
@@ -68,7 +77,10 @@ public class Server {
 			//create the system log
 			System.out.println("Creating system log...");
 			log = new Logger("log" + logDate() + ".txt");
+			System.out.println("Log started in file: " + log.getFileName());
 			
+			System.out.println("\n=====================================================");
+			System.out.println("Starting server on port " + port + "...");
 			
 			//create the listen socket
 			try {
@@ -117,20 +129,80 @@ public class Server {
 			try {
 				BufferedReader buff = new BufferedReader(new InputStreamReader(client.getInputStream(), "UTF-8"));
 				
+				
+				//find the command field of the POST request
+				
+				//gather all lines
+				String complete = "";
+				
 				String nextLine = buff.readLine();
 				while (nextLine != null){
 					System.out.println(nextLine);
+					complete = complete + nextLine;
 					nextLine = buff.readLine();
 				}
+				
+				
+				//with complete request, find the command sent
+				
+				if (complete.indexOf(CMD_TAG + INCREMENT_CMD) >= 0){
+					//increment command sent, increment points
+					
+					String cmdArg = getTagArg(complete, TEXT_TAG);
+					
+					//increment only if there is a user that exists.
+					if (UserDB.hasUser(cmdArg)){
+						UserDB.increment(cmdArg, INCREMENT);
+					}
+					
+					
+					
+					
+				}
+				else if (complete.indexOf(CMD_TAG + CHECK_CMD) >= 0){
+					//check command sent, return current points.
+					
+					
+				}
+				else{
+					//invalid command
+				}
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			
+			finally{
+				//always close the client
+				try {
+					client.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 			
 		}
 		
 	}
 	
+	/**
+	 * Gets the command argument of the Slack slash command of the
+	 * specified tag in the request.
+	 * Returned string is pre-trimmed.
+	 * @param postRequest The request to parse
+	 * @param tag The tag to extract the value of
+	 * @return Empty string if tag is not found, Value of the tag otherwise.
+	 */
+	private static String getTagArg(String postRequest, String tag){
+		
+		int index = postRequest.indexOf(tag);
+		
+		if (index >= 0){
+			String arg = postRequest.substring(index + tag.length(), postRequest.indexOf("&", index));
+			return arg.trim();
+		}
+		
+		return "";
+	}
 	
 	/**
 	 * The socket accepting thread that accepts all connections and attempts
@@ -162,5 +234,6 @@ public class Server {
 		}
 		
 	}
+	
 	
 }

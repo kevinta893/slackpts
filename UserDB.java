@@ -109,7 +109,7 @@ public class UserDB {
 	/**
 	 * Saves all current user values to the file.
 	 */
-	public void saveAll(){
+	public static void saveAll(){
 		File dbfile = new File(DB_FILE_NAME);
 
 		if (dbfile.exists() == false){
@@ -127,7 +127,6 @@ public class UserDB {
 				}
 
 				userFile.flush();
-				userFile.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -139,6 +138,10 @@ public class UserDB {
 		return masterList.size();
 	}
 
+	public static boolean hasUser(String name){
+		return masterList.get(name) != null;
+	}
+	
 	
 	/**
 	 * A thread safe method of incrementing the
@@ -149,7 +152,7 @@ public class UserDB {
 	public static synchronized void increment(String name, long amount){
 		User u = masterList.get(name);
 		u.increment(amount);
-		
+		UserDB.saveAll();
 	}
 	
 }

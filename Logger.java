@@ -15,18 +15,18 @@ import java.text.SimpleDateFormat;
  */
 public class Logger {
 
-	private String pathname;
+	private String filename;
 	
 	private BufferedWriter writer;
 	
 	private static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	
 	
-	public Logger(String pathname){
-		this.pathname = pathname;
+	public Logger(String filename){
+		this.filename = filename;
 		
 		//create the log file, append to existing
-		File logFile = new File(pathname);
+		File logFile = new File(filename);
 		
 		try {
 			boolean exists = logFile.exists();			//check if file already exists prior to creating
@@ -38,7 +38,7 @@ public class Logger {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-			System.err.println("Error! Cannot create the log file: " + pathname);
+			System.err.println("Error! Cannot create the log file: " + filename);
 		}
 	}
 
@@ -55,7 +55,7 @@ public class Logger {
 			writer.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
-			System.err.println("Error! Cannot write line to the log file: " + pathname);
+			System.err.println("Error! Cannot write line to the log file: " + filename);
 		}
 	}
 	
@@ -64,7 +64,7 @@ public class Logger {
 			writer.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
-			System.err.println("Error! Cannot save the log file: " + pathname);
+			System.err.println("Error! Cannot save the log file: " + filename);
 		}
 	}
 	
@@ -77,7 +77,7 @@ public class Logger {
 			writer = null;						//writer is dead.
 		} catch (IOException e) {
 			e.printStackTrace();
-			System.err.println("Error! Cannot close the log file: " + pathname);
+			System.err.println("Error! Cannot close the log file: " + filename);
 		}
 		
 	}
@@ -89,5 +89,9 @@ public class Logger {
 	 */
 	private static String timeStamp(){
 		return "[" + (formatter.format(new Date(System.currentTimeMillis()))) + "] ";
+	}
+	
+	public String getFileName(){
+		return filename;
 	}
 }
