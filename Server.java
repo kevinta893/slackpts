@@ -1,8 +1,11 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -116,6 +119,25 @@ public class Server {
 		return formatter.format(new Date(System.currentTimeMillis()));
 	}
 
+	
+	/**
+	 * Posts a message on slack on the specified channel
+	 * @param message
+	 * @param channel
+	 */
+	private static void messageSlack(String sendURL, String message, String channel){
+		try {
+			URL url = new URL(sendURL);
+			HttpURLConnection connect = (HttpURLConnection) url.openConnection();
+			
+			connect.setRequestMethod("POST");
+			connect.setRequestProperty("Content-Type", "text/plain");
+			connect.setRequestProperty("charset", "utf-8");
+			connect.connect();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 
 	/**
