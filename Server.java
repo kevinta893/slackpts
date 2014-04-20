@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
@@ -128,12 +129,20 @@ public class Server {
 	private static void messageSlack(String sendURL, String message, String channel){
 		try {
 			URL url = new URL(sendURL);
-			HttpURLConnection connect = (HttpURLConnection) url.openConnection();
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			
-			connect.setRequestMethod("POST");
-			connect.setRequestProperty("Content-Type", "text/plain");
-			connect.setRequestProperty("charset", "utf-8");
-			connect.connect();
+			//construct the packet
+			connection.setDoOutput(true); 
+			connection.setRequestMethod("POST");
+			connection.setRequestProperty("Content-Type", "text/plain");
+			connection.setRequestProperty("charset", "utf-8");
+			
+			
+			
+			
+			//OutputStream outPayload = new OutputStream();
+			
+			connection.connect();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
