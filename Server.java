@@ -31,18 +31,25 @@ public class Server {
 		System.out.println("Retriving user database...");
 		System.out.println("Found " + UserDB.getInstance().getUserCount() + " users in database.");
 		
+		//if there's no users in the database, warn user to add some
+		if (UserDB.getInstance().getUserCount() == 0){
+			System.out.println("Warning! Server has no users registered in database. Add some users to: " + UserDB.DB_FILE_NAME);
+		}
 		
+		//create the system log
 		System.out.println("Creating system log...");
-		log = new Logger("log" + logDate());
+		log = new Logger("log" + logDate() + ".txt");
 		
 		
+		//create the listen socket and start main loop
 		try {
 			listenSock = new ServerSocket(SERVER_PORT);
 			
-			while(stop == false){
-				listenSock.accept();
-				
-			}
+			
+			
+			listenSock.accept();
+
+			
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

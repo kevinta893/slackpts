@@ -14,13 +14,15 @@ import java.util.HashMap;
  * The name is used to refer to the user at any time.
  * Any malformed lines are ignored and the parsing continues through
  * the file. name or value must have at least one character to be valid.
+ * 
+ * If the user file is not specified, then a blank file is created.
  * @author Kevin
  *
  */
 public class UserDB {
 
 
-	private static final String DB_FILE_NAME = "users";
+	public static final String DB_FILE_NAME = "users.txt";
 
 	private static final String DELIM = ",";										//delimiter of each username and points
 
