@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -21,12 +21,13 @@ import java.util.HashMap;
  */
 public class UserDB {
 
+	public static final long DEFAULT_CASH = 0; 										//default cash value of new user
 
 	public static final String DB_FILE_NAME = "users.txt";
 
 	private static final String DELIM = ",";										//delimiter of each username and points
 
-	private static HashMap<String, User> masterList = new HashMap<String, User>();
+	private static ConcurrentHashMap<String, User> masterList = new ConcurrentHashMap<String, User>();
 
 	private static UserDB instance;
 
@@ -39,6 +40,7 @@ public class UserDB {
 
 	private UserDB(){
 
+	
 		//find the user database and read values by comma separation
 		File dbfile = new File(DB_FILE_NAME);
 		if (dbfile.exists() == false){
@@ -127,6 +129,7 @@ public class UserDB {
 				}
 
 				userFile.flush();
+				userFile.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -142,6 +145,15 @@ public class UserDB {
 		return masterList.get(name) != null;
 	}
 	
+	/**
+	 * Gets the current user object represented by the name
+	 * Returns null if no such user exists with that name.
+	 * @param name
+	 * @return
+	 */
+	public static User getUser(String name){
+		return masterList.get(name);
+	}
 	
 	/**
 	 * A thread safe method of incrementing the
@@ -153,6 +165,15 @@ public class UserDB {
 		User u = masterList.get(name);
 		u.increment(amount);
 		UserDB.saveAll();
+	}
+	
+	
+	public static void registerUser(String name){
+		masterList.put(name, new User(name, DEFAULT_CASH));
+	}
+	
+	public static void registerUser(String name, long newStart){
+		masterList.put(name, new User(name,newStart));
 	}
 	
 }

@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.BindException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
@@ -21,8 +22,9 @@ import java.util.regex.Pattern;
  */
 public class Server {
 
-	public static final String PTS_NAME = "peeg";
+	public static final String CURRENCY_NAME = "peeg";
 	public static final int INCREMENT = 1;
+	
 
 	//payload tags in Slack POST
 	public static final String PAYLOAD_START = "token=";
@@ -38,6 +40,7 @@ public class Server {
 	public static final String TIP_CMD = "%2Ftip";
 	public static final String CHECK_CMD = "%2Fcheck";
 	public static final String REGISTER_CMD = "%2Fregister";
+
 
 	private static final int DEFAULT_PORT = 48567;
 	private static ServerSocket listenSock;
@@ -79,6 +82,7 @@ public class Server {
 
 			System.out.println("Retriving user database...");
 			System.out.println("Found " + UserDB.getInstance().getUserCount() + " users in database.");
+			UserMapping.getInstance().getCount();				//intialize the mapping
 
 			//if there's no users in the database, warn user to add some
 			if (UserDB.getInstance().getUserCount() == 0){
@@ -93,14 +97,25 @@ public class Server {
 			System.out.println("\n=====================================================");
 			System.out.println("Starting server on port " + port + "...");
 
+
+
+
 			//create the listen socket
 			try {
 				listenSock = new ServerSocket(port);
 
+			} catch (BindException e){
+				System.err.println(e.getMessage());
+				System.err.println("Cannot setup server! Quitting...");
+				System.exit(-1);
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
+				System.err.println("Cannot setup server! Quitting...");
+				System.exit(-1);
 			} catch (IOException e) {
 				e.printStackTrace();
+				System.err.println("Cannot setup server! Quitting...");
+				System.exit(-1);
 			}
 
 			//create the handling thread and run it.
@@ -120,7 +135,7 @@ public class Server {
 		return formatter.format(new Date(System.currentTimeMillis()));
 	}
 
-	
+
 	/**
 	 * Posts a message on slack on the specified channel
 	 * @param message
@@ -130,18 +145,21 @@ public class Server {
 		try {
 			URL url = new URL(sendURL);
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			
+
 			//construct the packet
 			connection.setDoOutput(true); 
 			connection.setRequestMethod("POST");
 			connection.setRequestProperty("Content-Type", "text/plain");
 			connection.setRequestProperty("charset", "utf-8");
-			
-			
-			
-			//OutputStream outPayload = new OutputStream();
-			
+
+
+
+			OutputStream payload = connection.getOutputStream();
+			payload.write(message.getBytes());
+			payload.flush();
+
 			connection.connect();
+			connection.disconnect();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -186,10 +204,17 @@ public class Server {
 				String userID = getTagArg(payload, USER_ID_TAG);
 				String userName = getTagArg(payload, USER_NAME_TAG);
 				String command = getTagArg(payload, CMD_TAG);
-				String[] args = getTextArgs(payload);
+				String[] args = getTextArgs(payload);								//arguements of the command
 
 
-				System.out.println(payload);
+				//print command out
+				System.out.print(command);
+				for (int i =0; i < args.length; i++){
+					System.out.print(" " + args[i]);
+				}
+				System.out.println("");
+				
+				
 
 				if (command.equals(TIP_CMD)){
 					//increment command sent, increment points
@@ -197,18 +222,65 @@ public class Server {
 
 					//increment only if there is a user that exists.
 					if (args.length == 1){
-						if (UserDB.hasUser(userName)){
-							UserDB.increment(userName, INCREMENT);
+
+						String targetID = UserMapping.getInstance().getID(args[0]);
+						if (targetID != null){
+							if (UserDB.hasUser(targetID)){
+								UserDB.increment(targetID, INCREMENT);
+								log.writeLine(userName + " gave " + args[0] + " " + INCREMENT + CURRENCY_NAME);
+							}
+						}
+						else{
+							//TODO no mapping found, return error
+							//"User not recognized! Did that user get an account with the bank of Slack? Get that user to enter the command /register to sign up. If you already have an account, but changed your name please enter the command /register ASAP."
 						}
 					}
 
 
 
 				}
-				else if (command.equals(TIP_CMD)){
+				else if (command.equals(CHECK_CMD)){
 					//check command sent, return current points.
-					
 
+					if (args.length == 1){
+
+						String targetID = UserMapping.getInstance().getID(args[0]);
+
+						if(targetID != null){
+							if (UserDB.hasUser(targetID)){
+								User check = UserDB.getUser(args[0]);
+								String humanName = UserMapping.getInstance().getName(targetID);
+								//messageSlack("", humanName + " has " + check.getPts() + CURRENCY_NAME + ".", channelName);
+							}
+						}
+						else{
+							//TODO no such user exists, report back
+							//messageSlack("","No such user exits", channelName);
+						}
+
+					}
+
+				}
+				else if (command.equals(REGISTER_CMD)){
+					//register command sent, update id of new user.
+
+					if (UserMapping.getInstance().registerPair(userName, userID)){
+						UserMapping.saveAll();
+						log.writeLine("Added " + userName + " as new ID: " + userID);
+						
+						//create new user in database
+						UserDB.registerUser(userID);
+					}
+					else{
+						String oldName = UserMapping.getInstance().getName(userID);
+						if (UserMapping.getInstance().updateName(oldName, userName)){
+							//successful name update.
+							
+							UserMapping.saveAll();
+							log.writeLine("Updated " + oldName + " as new name: " + userName);
+							//TODO
+						}
+					}
 				}
 				else{
 					//invalid command
@@ -301,11 +373,11 @@ public class Server {
 		}
 
 	}
-	/*
+
 	public static void main(String[] args){
-		String[] derp= Server.getTextArgs("");
+		Server.messageSlack("https://awktocreations.slack.com/services/hooks/incoming-webhook?token=sr9pEgsE2mZpvQlSMtMmcOXv", "payload={\"text\": \"This is posted to #git-blog and comes from a bot named webhookbot.\"}", "null");
 		int i =0;
 		i++;
 	}
-	 */
+
 }
