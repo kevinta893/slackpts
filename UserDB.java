@@ -83,58 +83,71 @@ public class UserDB {
 					}
 
 				}
-			
-
-			//otherwise skip to next line
-			nextLine = br.readLine();
-		}
-
-		br.close();
-		fr.close();
-	} catch (IOException e) {
-		e.printStackTrace();
-
-	}
-
-	//print warning if no users have been read from the file
-	if (masterList.size() <=0){
-		System.err.println("Warning! No users read from the file.");
-	}
-
-}
 
 
-/**
- * Saves all current user values to the file.
- */
-public void saveAll(){
-	File dbfile = new File(DB_FILE_NAME);
-
-	if (dbfile.exists() == false){
-		//cannot file file, cannot save
-		System.err.println("Error! Cannot save user file, cannot be found");
-	}
-	else{
-
-		//open file for overwriting
-		try {
-			BufferedWriter userFile = new BufferedWriter(new FileWriter(dbfile, false));
-
-			for (User user : masterList.values()){
-				userFile.write(user.getName() + "," + user.getPts() + "\n");
+				//otherwise skip to next line
+				nextLine = br.readLine();
 			}
 
-			userFile.flush();
-			userFile.close();
+			br.close();
+			fr.close();
 		} catch (IOException e) {
 			e.printStackTrace();
+
+		}
+
+		//print warning if no users have been read from the file
+		if (masterList.size() <=0){
+			System.err.println("Warning! No users read from the file.");
+		}
+
+	}
+
+
+	/**
+	 * Saves all current user values to the file.
+	 */
+	public void saveAll(){
+		File dbfile = new File(DB_FILE_NAME);
+
+		if (dbfile.exists() == false){
+			//cannot file file, cannot save
+			System.err.println("Error! Cannot save user file, cannot be found");
+		}
+		else{
+
+			//open file for overwriting
+			try {
+				BufferedWriter userFile = new BufferedWriter(new FileWriter(dbfile, false));
+
+				for (User user : masterList.values()){
+					userFile.write(user.getName() + "," + user.getPts() + "\n");
+				}
+
+				userFile.flush();
+				userFile.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
-}
 
 
-public int getUserCount(){
-	return masterList.size();
-}
+	public int getUserCount(){
+		return masterList.size();
+	}
 
+	
+	/**
+	 * A thread safe method of incrementing the
+	 * number of likes for the user.
+	 * @param name
+	 * @param amount
+	 */
+	public static synchronized void increment(String name, long amount){
+		User u = masterList.get(name);
+		u.increment(amount);
+		
+	}
+	
 }
