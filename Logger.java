@@ -88,7 +88,7 @@ public class Logger {
 	 * @return
 	 */
 	private static String timeStamp(){
-		return "[" + (formatter.format(new Date(System.currentTimeMillis()))) + "] ";
+		return "[" + (formatter.format(new Date(System.currentTimeMillis()))) + "]: ";
 	}
 	
 	public String getFileName(){

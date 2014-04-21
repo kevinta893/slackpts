@@ -181,6 +181,7 @@ public class UserMapping {
 			throw new IllegalArgumentException("No mapping of the old name " + oldName + " was found. Cannot update with new name.");
 		}
 		
+		//update the mappings
 		nameMapping.put(newName, id);
 		idMapping.put(id, newName);
 		

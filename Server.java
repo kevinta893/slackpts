@@ -1,4 +1,6 @@
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -13,6 +15,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.regex.Pattern;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 
 /**
@@ -80,22 +89,22 @@ public class Server {
 		//run only if the current thread is not created. Single instance
 		if (acceptThread == null){
 
-			System.out.println("Retriving user database...");
-			System.out.println("Found " + UserDB.getInstance().getUserCount() + " users in database.");
+			println("Retriving user database...");
+			println("Found " + UserDB.getInstance().getUserCount() + " users in database.");
 			UserMapping.getInstance().getCount();				//intialize the mapping
 
 			//if there's no users in the database, warn user to add some
 			if (UserDB.getInstance().getUserCount() == 0){
-				System.out.println("Warning! Server has no users registered in database. Add some users to: " + UserDB.DB_FILE_NAME);
+				println("Warning! Server has no users registered in database.");
 			}
 
 			//create the system log
-			System.out.println("Creating system log...");
+			println("Creating system log...");
 			log = new Logger("log" + logDate() + ".txt");
-			System.out.println("Log started in file: " + log.getFileName());
+			println("Log started in file: " + log.getFileName());
 
 			System.out.println("\n=====================================================");
-			System.out.println("Starting server on port " + port + "...");
+			println("Starting server on port " + port + "...");
 
 
 
@@ -143,28 +152,32 @@ public class Server {
 	 */
 	private static void messageSlack(String sendURL, String message, String channel){
 		try {
-			URL url = new URL(sendURL);
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			
+			
+			
+			CloseableHttpClient slackServer = HttpClients.createDefault();
+			
+			HttpPost slackMessage = new HttpPost(sendURL);
+			slackMessage.setHeader("Content-Type", "application/json; charset=UTF-8");
+			slackMessage.setEntity(new StringEntity(message));
+			HttpResponse response  = slackServer.execute(slackMessage);
 
-			//construct the packet
-			connection.setDoOutput(true); 
-			connection.setRequestMethod("POST");
-			connection.setRequestProperty("Content-Type", "text/plain");
-			connection.setRequestProperty("charset", "utf-8");
-
-
-
-			OutputStream payload = connection.getOutputStream();
-			payload.write(message.getBytes());
-			payload.flush();
-
-			connection.connect();
-			connection.disconnect();
+			
+			//print reply from slack server if any.
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			response.getEntity().writeTo(baos);
+			Server.getInstance().println("<Slack Server>: " + (new String(baos.toByteArray())));
+			
+			slackServer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
+	
+	
+	
+	
 
 	/**
 	 * The request handler created when a new request is being made.
@@ -208,11 +221,11 @@ public class Server {
 
 
 				//print command out
-				System.out.print(command);
+				String fullCommand = command;
 				for (int i =0; i < args.length; i++){
-					System.out.print(" " + args[i]);
+					fullCommand = fullCommand + " " + args[i];
 				}
-				System.out.println("");
+				println(userName + " issued command: \t"+fullCommand + "\n");
 				
 				
 
@@ -277,7 +290,7 @@ public class Server {
 							//successful name update.
 							
 							UserMapping.saveAll();
-							log.writeLine("Updated " + oldName + " as new name: " + userName);
+							log.writeLine("Updated " + oldName + " -> " + userName);
 							//TODO
 						}
 					}
@@ -360,7 +373,7 @@ public class Server {
 					Socket client = listenSock.accept();
 
 					//got a connection
-					System.out.println("Recieved connection from: " + client.getInetAddress().toString() + "@ port: " + client.getPort());
+					println("Recieved connection from: " + client.getInetAddress().toString() + ":" + client.getPort());
 
 					//handle request in new thread
 					Thread clientHandler = new Thread(new RequestHandler(client));
@@ -374,8 +387,29 @@ public class Server {
 
 	}
 
+	
+	private static SimpleDateFormat consoleDate = new SimpleDateFormat("HH:mm:ss");
+	
+	/**
+	 * Prints a line in the server and in the log. Time stamped
+	 */
+	public void printRecord(String message){
+		 System.out.println("[" + (consoleDate.format(new Date(System.currentTimeMillis()))) + "]: " + message);
+		 log.writeLine(message);
+	}
+	
+	/**
+	 * Prints a line in the server. Time stamped
+	 */
+	public void println(String message){
+		 System.out.println("[" + (consoleDate.format(new Date(System.currentTimeMillis()))) + "]: " + message);
+	}
+	
+	
+	
+	
 	public static void main(String[] args){
-		Server.messageSlack("https://awktocreations.slack.com/services/hooks/incoming-webhook?token=sr9pEgsE2mZpvQlSMtMmcOXv", "payload={\"text\": \"This is posted to #git-blog and comes from a bot named webhookbot.\"}", "null");
+		Server.messageSlack("https://awktocreations.slack.com/services/hooks/incoming-webhook?token=sr9pEgsE2mZpvQlSMtMmcOXv", "{\"text\":\"This is a line of text in a channel.\nAnd this is another line of text.\"}", "git-blog");
 		int i =0;
 		i++;
 	}
