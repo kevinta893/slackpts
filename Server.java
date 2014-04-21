@@ -50,8 +50,8 @@ public class Server {
 
 	private static volatile Logger log;
 	private static volatile Logger errorLog;
-	
-	
+
+
 	private static Thread acceptThread;
 	private static Thread maintanenceThread;
 
@@ -59,7 +59,7 @@ public class Server {
 
 
 	private static boolean running = true;
-
+	private static boolean silent = false;						//silent mode prevents server from posting to slack
 
 
 
@@ -112,7 +112,7 @@ public class Server {
 			//create the listen socket
 			try {
 				listenSock = new ServerSocket(Config.getPort());
-				
+
 			} catch (BindException e){
 				System.err.println(e.getMessage());
 				System.err.println("Cannot setup server! Quitting...");
@@ -136,7 +136,7 @@ public class Server {
 			maintanenceThread.start();
 		}
 
-		
+
 		//move this thread into command line service
 		println("Server now running. Enter commands to maintain.");
 		commandLine();
@@ -148,37 +148,37 @@ public class Server {
 	 * server.
 	 */
 	private static void commandLine(){
-		
+
 		Scanner in = new Scanner(System.in);
-		
+
 		String nextInput;
 		while (running == true){
 			nextInput = in.nextLine();
-			
+
 			String[] commandArgs = nextInput.split(" ", 2);
-			
+
 			String command = commandArgs[0].trim();
 			String args = (commandArgs.length == 2)? commandArgs[1] : "";
-			
-			
+
+
 			if (command.equals("/stop")){
 				//stop server command
 				println("Saving all information and stopping server...");
 				saveAllFiles();
 				running = false;
-				
+
 			}
 			else if(command.equals("/save")){
 				//save all current information immediately
 				println("Saving all logs and user information...");
 				saveAllFiles();
 				println("All files have been saved.");
-				
+
 			}
 			else if(command.equals("/message")){
 				//sends a message onto slack given the channel and message respectively
 				String[] split = args.split(" ", 2);
-				
+
 				//must be exactly two args.
 				if(split.length == 2){
 					println("Sending message...");
@@ -187,13 +187,29 @@ public class Server {
 				else{
 					println("To use /message, enter channel name then the message to send.");
 				}
-				
+
+			}
+			else if (command.equals("/silent")){
+				//toggle silent mode
+
+				if (silent == false){
+					//turn silent on
+					silent = true;
+					printRecord("Slient mode is ON, no messages will be posted to Slack.");
+				}
+				else if (silent == true){
+					//turn silent of
+					silent = false;
+					printRecord("Slient mode is OFF, messages will be posted to Slack.");
+				}
 			}
 			else{
 				println("Invalid command.");
 			}
 		}
-		
+
+
+		//shutdown server.
 		in.close();
 		System.exit(0);
 	}
@@ -208,8 +224,8 @@ public class Server {
 		UserDB.saveAll();
 		UserMapping.saveAll();
 	}
-	
-	
+
+
 	/**
 	 * Gets the current log date and returns a string.
 	 * These strings only differ by day.
@@ -227,44 +243,45 @@ public class Server {
 	 * @param channel
 	 */
 	private static void messageSlack(String textPost, String channel){
-		System.out.println(textPost);
+		//System.out.println(textPost);
 
-		String message;
-		//construct the JSON message
-		if (channel != null){
-			message = "payload={\"text\":\"`" + textPost + "`\", \"channel\":\"#" + channel + "\", \"username\": \"" + Config.getBotName() + "\"}";
+		if(silent == false){
+			String message;
+			//construct the JSON message
+			if (channel != null){
+				message = "payload={\"text\":\"`" + textPost + "`\", \"channel\":\"#" + channel + "\", \"username\": \"" + Config.getBotName() + "\"}";
+			}
+			else{
+				message = "payload={\"text\":\"`" + textPost + "`\", \"username\": \"" + Config.getBotName() + "\"}";
+			}
+
+
+			//System.out.println(message);
+			try {
+
+				CloseableHttpClient slackServer = HttpClients.createDefault();
+
+				HttpPost slackMessage = new HttpPost(Config.getSlackWebHook());
+
+				slackMessage.setHeader("User-Agent", "Slack Points Server");
+				slackMessage.setHeader("content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+				slackMessage.setEntity(new StringEntity(message));
+
+				HttpResponse response  = slackServer.execute(slackMessage);
+
+
+				//print reply from slack server if any.
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				response.getEntity().writeTo(baos);
+				println("<Slack Server>: " + (new String(baos.toByteArray())));
+
+				slackServer.close();
+			} catch (UnknownHostException e){
+				printException(e);
+			} catch (IOException e) {
+				printException(e);
+			}
 		}
-		else{
-			message = "payload={\"text\":\"`" + textPost + "`\", \"username\": \"" + Config.getBotName() + "\"}";
-		}
-
-
-		//System.out.println(message);
-		try {
-
-			CloseableHttpClient slackServer = HttpClients.createDefault();
-
-			HttpPost slackMessage = new HttpPost(Config.getSlackWebHook());
-
-			slackMessage.setHeader("User-Agent", "Slack Points Server");
-			slackMessage.setHeader("content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-			slackMessage.setEntity(new StringEntity(message));
-
-			HttpResponse response  = slackServer.execute(slackMessage);
-
-
-			//print reply from slack server if any.
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			response.getEntity().writeTo(baos);
-			println("<Slack Server>: " + (new String(baos.toByteArray())));
-
-			slackServer.close();
-		} catch (UnknownHostException e){
-			printException(e);
-		} catch (IOException e) {
-			printException(e);
-		}
-
 	}
 
 
@@ -318,7 +335,7 @@ public class Server {
 				for (int i =0; i < args.length; i++){
 					fullCommand = fullCommand + " " + args[i];
 				}
-				println(userName + " issued command: \t"+fullCommand + "\n");
+				println("<SLACK_CMD> " + userName + " issued command: \t"+fullCommand );
 
 
 
@@ -521,8 +538,8 @@ public class Server {
 					printException(e);
 				}
 			}
-			
-			
+
+
 			try {
 				listenSock.close();
 			} catch (IOException e) {
