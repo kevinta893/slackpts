@@ -319,149 +319,157 @@ public class Server {
 					nextLine = buff.readLine();
 				}
 
-				String payload = complete.substring(complete.indexOf("token="));
+				if (complete.indexOf("token=") >= 0){
+					//proper request.
 
-				//with complete request, find the command sent
-				String channelName = getTagArg(payload, CHANNEL_NAME_TAG);
-				//String channelID = getTagArg(payload, CHANNEL_ID_TAG);
-				String userID = getTagArg(payload, USER_ID_TAG);
-				String userName = getTagArg(payload, USER_NAME_TAG);
-				String command = getTagArg(payload, CMD_TAG);
-				String[] args = getTextArgs(payload);								//arguements of the command
+					String payload = complete.substring(complete.indexOf("token="));
 
-
-				//print command out
-				String fullCommand = command;
-				for (int i =0; i < args.length; i++){
-					fullCommand = fullCommand + " " + args[i];
-				}
-				println("<SLACK_CMD> " + userName + " issued command: \t"+fullCommand );
+					//with complete request, find the command sent
+					String channelName = getTagArg(payload, CHANNEL_NAME_TAG);
+					//String channelID = getTagArg(payload, CHANNEL_ID_TAG);
+					String userID = getTagArg(payload, USER_ID_TAG);
+					String userName = getTagArg(payload, USER_NAME_TAG);
+					String command = getTagArg(payload, CMD_TAG);
+					String[] args = getTextArgs(payload);								//arguements of the command
 
 
-
-				if (command.equals(TIP_CMD)){
-					//increment command sent, increment points
-
-
-					//increment only if there is a user that exists.
-					if (args.length == 1){
-
-						String targetID = UserMapping.getID(args[0]);
-
-						if (targetID != null){
-							if (UserDB.hasUser(targetID)){
+					//print command out
+					String fullCommand = command;
+					for (int i =0; i < args.length; i++){
+						fullCommand = fullCommand + " " + args[i];
+					}
+					println("<SLACK_CMD> " + userName + " issued command: \t"+fullCommand );
 
 
-								if (targetID.equals(userID) == false){
-									//not self, do tipping
 
-									UserDB.increment(targetID, INCREMENT);
-									log.writeLine(userName + " gave " + args[0] + " " + INCREMENT + Config.getCurrencyName());
-									messageSlack(userName + " gave " + args[0] + " " + INCREMENT + Config.getCurrencyName(), channelName);
+					if (command.equals(TIP_CMD)){
+						//increment command sent, increment points
+
+
+						//increment only if there is a user that exists.
+						if (args.length == 1){
+
+							String targetID = UserMapping.getID(args[0]);
+
+							if (targetID != null){
+								if (UserDB.hasUser(targetID)){
+
+
+									if (targetID.equals(userID) == false){
+										//not self, do tipping
+
+										UserDB.increment(targetID, INCREMENT);
+										log.writeLine(userName + " gave " + args[0] + " " + INCREMENT + Config.getCurrencyName());
+										messageSlack(userName + " gave " + args[0] + " " + INCREMENT + Config.getCurrencyName(), channelName);
+									}
+									else{
+										//error, cannot tip self.
+										messageSlack("You cannot tip yourself " + userName + "!", channelName);
+									}
 								}
-								else{
-									//error, cannot tip self.
-									messageSlack("You cannot tip yourself " + userName + "!", channelName);
+							}
+							else{
+								//no mapping found, return error
+								messageSlack("I do not recognize who " + args[0] + " is! Did that user get an account with the bank of Slack? Get that user to enter the command /register to sign up. If you already have an account, but changed your name recently please enter the command /register ASAP.", channelName);
+							}
+						}
+
+
+
+					}
+					else if (command.equals(CHECK_CMD)){
+						//check command sent, return current points.
+
+						if ((args.length == 1) && (args[0].equals("") == false)){
+
+
+							//get the id of the user
+							String targetID = UserMapping.getID(args[0]);
+
+							if(targetID != null){
+								if (UserDB.hasUser(targetID)){
+									//user exists, return their count.
+									User check = UserDB.getUser(targetID);
+									String humanName = UserMapping.getName(targetID);
+									messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
 								}
 							}
+							else{
+								//no such user exists, report back
+								messageSlack("No such user named " + userName + " exists. Have they registered yet?", channelName);
+							}
+
 						}
-						else{
-							//no mapping found, return error
-							messageSlack("I do not recognize who " + args[0] + " is! Did that user get an account with the bank of Slack? Get that user to enter the command /register to sign up. If you already have an account, but changed your name recently please enter the command /register ASAP.", channelName);
-						}
-					}
+						else if ((args.length == 1) && (args[0].equals("") == true)){
 
+							//get the id of the user
+							String targetID = UserMapping.getID(userName);
 
-
-				}
-				else if (command.equals(CHECK_CMD)){
-					//check command sent, return current points.
-
-					if ((args.length == 1) && (args[0].equals("") == false)){
-
-
-						//get the id of the user
-						String targetID = UserMapping.getID(args[0]);
-
-						if(targetID != null){
-							if (UserDB.hasUser(targetID)){
-								//user exists, return their count.
-								User check = UserDB.getUser(targetID);
-								String humanName = UserMapping.getName(targetID);
-								messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
+							if(targetID != null){
+								if (UserDB.hasUser(targetID)){
+									//user exists, return their count.
+									User check = UserDB.getUser(targetID);
+									String humanName = UserMapping.getName(targetID);
+									messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
+								}
+							}
+							else{
+								//no such user exists, report back
+								messageSlack("I cannot find your record " + userName + ". Have you registered yet?", channelName);
 							}
 						}
-						else{
-							//no such user exists, report back
-							messageSlack("No such user named " + userName + " exists. Have they registered yet?", channelName);
-						}
 
 					}
-					else if ((args.length == 1) && (args[0].equals("") == true)){
+					else if (command.equals(REGISTER_CMD)){
+						//register command sent, update id of new user.
 
-						//get the id of the user
-						String targetID = UserMapping.getID(userName);
-
-						if(targetID != null){
-							if (UserDB.hasUser(targetID)){
-								//user exists, return their count.
-								User check = UserDB.getUser(targetID);
-								String humanName = UserMapping.getName(targetID);
-								messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
-							}
-						}
-						else{
-							//no such user exists, report back
-							messageSlack("I cannot find your record " + userName + ". Have you registered yet?", channelName);
-						}
-					}
-
-				}
-				else if (command.equals(REGISTER_CMD)){
-					//register command sent, update id of new user.
-
-					if (UserMapping.registerPair(userName, userID)){
-						UserMapping.saveAll();
-
-						log.writeLine("Added " + userName + " as new ID: " + userID);
-
-						//create new user in database
-						UserDB.registerUser(userID);
-						UserDB.saveAll();
-
-
-						messageSlack("Welcome "+ userName + "! You have " + UserDB.getUser(userID).getPts() 
-								+ Config.getCurrencyName() + ". Earn more by getting tips from friends.", channelName);
-					}
-					else{
-						String oldName = UserMapping.getName(userID);
-						if (UserMapping.updateName(oldName, userName)){
-							//successful name update.
-
+						if (UserMapping.registerPair(userName, userID)){
 							UserMapping.saveAll();
 
-							log.writeLine("Updated " + oldName + " -> " + userName);
+							log.writeLine("Added " + userName + " as new ID: " + userID);
 
-							messageSlack("Gotcha! I'll remember you as " + userName + " from now on.", channelName);
+							//create new user in database
+							UserDB.registerUser(userID);
+							UserDB.saveAll();
+
+
+							messageSlack("Welcome "+ userName + "! You have " + UserDB.getUser(userID).getPts() 
+									+ Config.getCurrencyName() + ". Earn more by getting tips from friends.", channelName);
+						}
+						else{
+							String oldName = UserMapping.getName(userID);
+							if (UserMapping.updateName(oldName, userName)){
+								//successful name update.
+
+								UserMapping.saveAll();
+
+								log.writeLine("Updated " + oldName + " -> " + userName);
+
+								messageSlack("Gotcha! I'll remember you as " + userName + " from now on.", channelName);
+							}
 						}
 					}
+					else{
+						//invalid command
+						messageSlack("Sorry I don't understand that command. :frown:", channelName);
+					}
 				}
-				else{
-					//invalid command
-					messageSlack("Sorry I don't understand that command. :frown:", channelName);
-				}
+			} catch (IOException e) {
+				printException(e);
+			} catch(Exception e){
+				printException(e);
+			}
 
+
+
+
+			//always close the client
+			try {
+				client.close();
 			} catch (IOException e) {
 				printException(e);
 			}
-			finally{
-				//always close the client
-				try {
-					client.close();
-				} catch (IOException e) {
-					printException(e);
-				}
-			}
+
 
 		}
 
