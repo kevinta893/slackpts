@@ -100,7 +100,7 @@ public class Server {
 			//create the system log
 			println("Creating system logs...");
 			log = new Logger("log" + logDate() + ".txt");
-			errorLog = new Logger(errorLog + logDate() + ".txt");
+			errorLog = new Logger("errorLog" + logDate() + ".txt");
 			println("Log started in file: " + log.getFileName());
 
 
