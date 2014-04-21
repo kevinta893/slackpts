@@ -48,6 +48,9 @@ public class Server {
 
 	private static ServerSocket listenSock;
 
+	
+	
+	
 	//loggers
 	private static volatile Logger log;
 	private static volatile Logger errorLog;
@@ -55,13 +58,14 @@ public class Server {
 	private static final String ERROR_LOG_FILENAME = "errorLog";
 	
 
+	//threads
 	private static Thread acceptThread;
 	private static Thread maintanenceThread;
 
 	private static final int MAINTENANCE_TIME = 300000; 		//every 5 minutes, run maintenance thread.
 
 
-	private static boolean running = true;
+	private static boolean running = true;						//server running or not
 	private static boolean silent = false;						//silent mode prevents server from posting to slack
 
 
