@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Scanner;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -44,12 +45,23 @@ public class Server {
 	public static final String REGISTER_CMD = "%2Fregister";
 
 
+
 	private static ServerSocket listenSock;
 
 	private static volatile Logger log;
-
+	private static volatile Logger errorLog;
+	
+	
 	private static Thread acceptThread;
+	private static Thread maintanenceThread;
+
+	private static final int MAINTENANCE_TIME = 300000; 		//every 5 minutes, run maintenance thread.
+
+
 	private static boolean running = true;
+
+
+
 
 
 	private static Server instance;
@@ -75,20 +87,20 @@ public class Server {
 		if (acceptThread == null){
 
 			println("Getting configuration settings...");
-			Config.getInstance().getCount();
 
 			println("Retriving user database...");
-			println("Found " + UserDB.getInstance().getUserCount() + " users in database.");
-			UserMapping.getInstance().getCount();				//Initialize the mapping
+			println("Found " + UserDB.getUserCount() + " users in database.");
+			UserMapping.getCount();				//Initialize the mapping
 
 			//if there's no users in the database, warn user to add some
-			if (UserDB.getInstance().getUserCount() == 0){
+			if (UserDB.getUserCount() == 0){
 				println("Warning! Server has no users registered in database.");
 			}
 
 			//create the system log
-			println("Creating system log...");
+			println("Creating system logs...");
 			log = new Logger("log" + logDate() + ".txt");
+			errorLog = new Logger(errorLog + logDate() + ".txt");
 			println("Log started in file: " + log.getFileName());
 
 
@@ -100,7 +112,7 @@ public class Server {
 			//create the listen socket
 			try {
 				listenSock = new ServerSocket(Config.getPort());
-				println("Server now running.");
+				
 			} catch (BindException e){
 				System.err.println(e.getMessage());
 				System.err.println("Cannot setup server! Quitting...");
@@ -115,13 +127,89 @@ public class Server {
 				System.exit(-1);
 			}
 
+
 			//create the handling thread and run it.
 			acceptThread = new Thread(new SocketAccepter());
-			acceptThread.run();
+			acceptThread.start();
+
+			maintanenceThread = new Thread(new MaintenanceThread());
+			maintanenceThread.start();
 		}
+
+		
+		//move this thread into command line service
+		println("Server now running. Enter commands to maintain.");
+		commandLine();
 	}
 
 
+	/**
+	 * Server commandline that runs commands to manage the
+	 * server.
+	 */
+	private static void commandLine(){
+		
+		Scanner in = new Scanner(System.in);
+		
+		String nextInput;
+		while (running == true){
+			nextInput = in.nextLine();
+			
+			String[] commandArgs = nextInput.split(" ", 2);
+			
+			String command = commandArgs[0].trim();
+			String args = (commandArgs.length == 2)? commandArgs[1] : "";
+			
+			
+			if (command.equals("/stop")){
+				//stop server command
+				println("Saving all information and stopping server...");
+				saveAllFiles();
+				running = false;
+				
+			}
+			else if(command.equals("/save")){
+				//save all current information immediately
+				println("Saving all logs and user information...");
+				saveAllFiles();
+				println("All files have been saved.");
+				
+			}
+			else if(command.equals("/message")){
+				//sends a message onto slack given the channel and message respectively
+				String[] split = args.split(" ", 2);
+				
+				//must be exactly two args.
+				if(split.length == 2){
+					println("Sending message...");
+					messageSlack(split[1], split[0]);
+				}
+				else{
+					println("To use /message, enter channel name then the message to send.");
+				}
+				
+			}
+			else{
+				println("Invalid command.");
+			}
+		}
+		
+		in.close();
+		System.exit(0);
+	}
+
+
+	/**
+	 * Saves all critical files.
+	 */
+	private static void saveAllFiles(){
+		log.saveLog();
+		errorLog.saveLog();
+		UserDB.saveAll();
+		UserMapping.saveAll();
+	}
+	
+	
 	/**
 	 * Gets the current log date and returns a string.
 	 * These strings only differ by day.
@@ -140,7 +228,7 @@ public class Server {
 	 */
 	private static void messageSlack(String textPost, String channel){
 		System.out.println(textPost);
-		
+
 		String message;
 		//construct the JSON message
 		if (channel != null){
@@ -149,7 +237,7 @@ public class Server {
 		else{
 			message = "payload={\"text\":\"`" + textPost + "`\", \"username\": \"" + Config.getBotName() + "\"}";
 		}
-		 
+
 
 		//System.out.println(message);
 		try {
@@ -168,7 +256,7 @@ public class Server {
 			//print reply from slack server if any.
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			response.getEntity().writeTo(baos);
-			Server.getInstance().println("<Slack Server>: " + (new String(baos.toByteArray())));
+			println("<Slack Server>: " + (new String(baos.toByteArray())));
 
 			slackServer.close();
 		} catch (UnknownHostException e){
@@ -180,8 +268,8 @@ public class Server {
 	}
 
 
-
-
+	//====================================================================================================
+	//The request handler
 
 
 	/**
@@ -241,7 +329,7 @@ public class Server {
 					//increment only if there is a user that exists.
 					if (args.length == 1){
 
-						String targetID = UserMapping.getInstance().getID(args[0]);
+						String targetID = UserMapping.getID(args[0]);
 
 						if (targetID != null){
 							if (UserDB.hasUser(targetID)){
@@ -276,13 +364,13 @@ public class Server {
 
 
 						//get the id of the user
-						String targetID = UserMapping.getInstance().getID(args[0]);
+						String targetID = UserMapping.getID(args[0]);
 
 						if(targetID != null){
 							if (UserDB.hasUser(targetID)){
 								//user exists, return their count.
 								User check = UserDB.getUser(targetID);
-								String humanName = UserMapping.getInstance().getName(targetID);
+								String humanName = UserMapping.getName(targetID);
 								messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
 							}
 						}
@@ -295,13 +383,13 @@ public class Server {
 					else if ((args.length == 1) && (args[0].equals("") == true)){
 
 						//get the id of the user
-						String targetID = UserMapping.getInstance().getID(userName);
+						String targetID = UserMapping.getID(userName);
 
 						if(targetID != null){
 							if (UserDB.hasUser(targetID)){
 								//user exists, return their count.
 								User check = UserDB.getUser(targetID);
-								String humanName = UserMapping.getInstance().getName(targetID);
+								String humanName = UserMapping.getName(targetID);
 								messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
 							}
 						}
@@ -315,7 +403,7 @@ public class Server {
 				else if (command.equals(REGISTER_CMD)){
 					//register command sent, update id of new user.
 
-					if (UserMapping.getInstance().registerPair(userName, userID)){
+					if (UserMapping.registerPair(userName, userID)){
 						UserMapping.saveAll();
 
 						log.writeLine("Added " + userName + " as new ID: " + userID);
@@ -329,8 +417,8 @@ public class Server {
 								+ Config.getCurrencyName() + ". Earn more by getting tips from friends.", channelName);
 					}
 					else{
-						String oldName = UserMapping.getInstance().getName(userID);
-						if (UserMapping.getInstance().updateName(oldName, userName)){
+						String oldName = UserMapping.getName(userID);
+						if (UserMapping.updateName(oldName, userName)){
 							//successful name update.
 
 							UserMapping.saveAll();
@@ -403,6 +491,10 @@ public class Server {
 		return (new String[0]);
 	}
 
+
+	//===========================================================================================================
+
+
 	/**
 	 * The socket accepting thread that accepts all connections and attempts
 	 * to service them.
@@ -424,16 +516,47 @@ public class Server {
 
 					//handle request in new thread
 					Thread clientHandler = new Thread(new RequestHandler(client));
-					clientHandler.run();
+					clientHandler.start();
 				} catch (IOException e) {
 					printException(e);
 				}
+			}
+			
+			
+			try {
+				listenSock.close();
+			} catch (IOException e) {
+				printException(e);
 			}
 
 		}
 
 	}
 
+
+	private final class MaintenanceThread implements Runnable{
+
+		@Override
+		public void run() {
+
+			try {
+				Thread.sleep(MAINTENANCE_TIME);
+				saveAllFiles();
+				printRecord("--> Maintenance Thread saved all information");
+			} catch (InterruptedException e) {
+				printException(e);
+			}
+		}
+
+	}
+
+
+
+
+
+
+	//================================================================
+	//Reporting methods and console print
 
 	private static SimpleDateFormat consoleDate = new SimpleDateFormat("HH:mm:ss");
 
@@ -443,23 +566,22 @@ public class Server {
 
 	/**
 	 * Prints out an exception when it occurs. Only the stack
-	 * trace is printed to the log. But an occurance is shown
+	 * trace is printed to the error log. But an occurance is shown
 	 * in both the console and the log.
+	 * 
 	 * @param e
 	 */
 	public static void printException(Exception e){
-		String message = timeStamp() + "Exception occurred. " + UnknownHostException.class.getName() + ": " + e.getMessage() +
-				" --Please see log for stack trace--";
-		System.err.println(message);
+		String message = timeStamp() + "Exception occurred. " + UnknownHostException.class.getName() + ": " + e.getMessage();
+		printRecord(message + " --Please see error log for stack trace--");
 
-
-		//Convert stack trace into string and print to log
+		//Convert stack trace into string and print to error log
 		StringWriter error = new StringWriter();
 		e.printStackTrace(new PrintWriter(error));
 		String stackTrace = error.toString();
 
-		log.writeLine(message + "\n" + stackTrace);
-		
+		errorLog.writeLine(message + "\n" + stackTrace);
+
 		messageSlack("Whoops! I ran into an exception. See my log.", null);
 	}
 
@@ -474,7 +596,7 @@ public class Server {
 	/**
 	 * Prints a line in the server. Time stamped
 	 */
-	public void println(String message){
+	public static void println(String message){
 		System.out.println(timeStamp() + message);
 	}
 
@@ -483,7 +605,7 @@ public class Server {
 	/*
 	public static void main(String[] args){
 		Config.getInstance().getCount();
-		Server.messageSlack("Exception?", null);
+		Server.messageSlack("Error! Insufficient Veto power. I belong to general-armstrong now.", "random");
 
 	}
 	 */

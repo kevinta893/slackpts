@@ -29,12 +29,9 @@ public class UserDB {
 
 	private static ConcurrentHashMap<String, User> masterList = new ConcurrentHashMap<String, User>();
 
-	private static UserDB instance;
+	private static UserDB instance = new UserDB();
 
 	public static UserDB getInstance(){
-		if (instance == null){
-			instance = new UserDB();
-		}
 		return instance;
 	}
 
@@ -111,7 +108,7 @@ public class UserDB {
 	/**
 	 * Saves all current user values to the file.
 	 */
-	public static void saveAll(){
+	public synchronized static void saveAll(){
 		File dbfile = new File(DB_FILE_NAME);
 
 		if (dbfile.exists() == false){
@@ -137,7 +134,7 @@ public class UserDB {
 	}
 
 
-	public int getUserCount(){
+	public static int getUserCount(){
 		return masterList.size();
 	}
 

@@ -4,8 +4,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
+
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -24,17 +25,14 @@ public class UserMapping {
 	private static final String MAPPING_FILE_NAME = "mappings";
 	private static final String DELIM = ",";
 
-	private static HashMap<String, String> nameMapping = new HashMap<String, String>();					//names to ids
-	private static HashMap<String, String> idMapping = new HashMap<String, String>();					//ids to names
+	private static ConcurrentHashMap<String, String> nameMapping = new ConcurrentHashMap<String, String>();					//names to ids
+	private static ConcurrentHashMap<String, String> idMapping = new ConcurrentHashMap<String, String>();					//ids to names
 	
 
 
-	private static UserMapping instance;
+	private static UserMapping instance = new UserMapping();
 
 	public static UserMapping getInstance(){
-		if (instance == null){
-			instance = new UserMapping();
-		}
 		return instance;
 	}
 
@@ -100,7 +98,7 @@ public class UserMapping {
 	/**
 	 * Saves all current user values to the file.
 	 */
-	public static void saveAll(){
+	public static synchronized void saveAll(){
 		File dbfile = new File(MAPPING_FILE_NAME);
 
 		if (dbfile.exists() == false){
@@ -134,7 +132,7 @@ public class UserMapping {
 	 * @param name
 	 * @return
 	 */
-	public String getID(String name){
+	public static String getID(String name){
 		return nameMapping.get(name);
 	}
 
@@ -143,7 +141,7 @@ public class UserMapping {
 	 * @param id
 	 * @return
 	 */
-	public String getName(String id){
+	public static String getName(String id){
 		return idMapping.get(id);
 	}
 	
@@ -153,7 +151,7 @@ public class UserMapping {
 	 * @param id
 	 * @return True if the pair was registered as a new pair. False otherwise
 	 */
-	public synchronized boolean registerPair(String name, String id){
+	public static synchronized boolean registerPair(String name, String id){
 		
 		//ensure that the mapping does not contain double keys
 		if (nameMapping.containsKey(name) == true){
@@ -176,7 +174,7 @@ public class UserMapping {
 	 * @param oldName
 	 * @param newName
 	 */
-	public synchronized boolean updateName(String oldName, String newName){
+	public static synchronized boolean updateName(String oldName, String newName){
 		String id = nameMapping.remove(oldName);
 		
 		if (id == null){
@@ -190,7 +188,7 @@ public class UserMapping {
 		return true;
 	}
 	
-	public int getCount(){
+	public static int getCount(){
 		
 		if (nameMapping.size() != idMapping.size()){
 			throw new IllegalStateException("Class invariant invalid. Name and id maps are unequal.");

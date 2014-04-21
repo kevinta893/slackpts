@@ -14,6 +14,8 @@ import java.util.Map.Entry;
  * used in the server. The configuration file is automatically
  * generated if there no existing file. The file is then
  * filled with the default values.
+ * 
+ * Thread safe as no configurations can be written here.
  * @author Kevin
  *
  */
@@ -38,12 +40,9 @@ public class Config{
 
 
 
-	private static Config instance;
+	private static Config instance = new Config();
 
 	public static Config getInstance(){
-		if (instance == null){
-			instance = new Config();
-		}
 		return instance;
 	}
 
@@ -116,7 +115,7 @@ public class Config{
 	/**
 	 * Saves all current user values to the file.
 	 */
-	private static void saveAll(){
+	private synchronized static void saveAll(){
 		File dbfile = new File(CONFIG_FILE_NAME);
 
 		if (dbfile.exists() == false){
@@ -157,7 +156,7 @@ public class Config{
 		
 	}
 
-	public int getCount(){
+	public static int getCount(){
 		return properties.size();
 	}
 
