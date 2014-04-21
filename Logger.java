@@ -11,6 +11,8 @@ import java.text.SimpleDateFormat;
  * The logger class, writes messages to a intantiated file name.
  * Each message is time stamped.
  * 
+ * Maintains a timestamp named log in the .txt extension.
+ * 
  * This Class is not thread safe, and must be locked before use in
  * a multi-threaded enviroment.
  * @author Kevin
@@ -22,14 +24,14 @@ public class Logger {
 	
 	private BufferedWriter writer;
 	
-	private static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	
 	
 	
 	public Logger(String filename){
 		this.filename = filename;
 		
 		//create the log file, append to existing
-		File logFile = new File(filename);
+		File logFile = new File(filename + " - " + dateStamp() + ".txt");
 		
 		try {
 			boolean exists = logFile.exists();			//check if file already exists prior to creating
@@ -86,6 +88,9 @@ public class Logger {
 		
 	}
 	
+	
+	private static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private static SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
 	/**
 	 * Returns a time stamp for the log file. Also includes
 	 * a terminating space for easy use.
@@ -95,6 +100,13 @@ public class Logger {
 		return "[" + (formatter.format(new Date(System.currentTimeMillis()))) + "]: ";
 	}
 	
+	/**
+	 * Returns the current date.
+	 * @return
+	 */
+	private static String dateStamp(){
+		return dateFormatter.format(new Date(System.currentTimeMillis()));
+	}
 	public String getFileName(){
 		return filename;
 	}

@@ -48,9 +48,12 @@ public class Server {
 
 	private static ServerSocket listenSock;
 
+	//loggers
 	private static volatile Logger log;
 	private static volatile Logger errorLog;
-
+	private static final String LOG_FILENAME = "log";
+	private static final String ERROR_LOG_FILENAME = "errorLog";
+	
 
 	private static Thread acceptThread;
 	private static Thread maintanenceThread;
@@ -62,7 +65,7 @@ public class Server {
 	private static boolean silent = false;						//silent mode prevents server from posting to slack
 
 
-
+	//private static Date startDate = new Date(System.currentTimeMillis());
 
 	private static Server instance;
 
@@ -99,8 +102,8 @@ public class Server {
 
 			//create the system log
 			println("Creating system logs...");
-			log = new Logger("log" + logDate() + ".txt");
-			errorLog = new Logger("errorLog" + logDate() + ".txt");
+			log = new Logger(LOG_FILENAME);
+			errorLog = new Logger(ERROR_LOG_FILENAME);
 			println("Log started in file: " + log.getFileName());
 
 
@@ -132,12 +135,15 @@ public class Server {
 			acceptThread = new Thread(new SocketAccepter());
 			acceptThread.start();
 
+			//startTime = new Date(System.currentTimeMillis());							//server actually starts running here.
+			
 			maintanenceThread = new Thread(new MaintenanceThread());
 			maintanenceThread.start();
 		}
 
 
 		//move this thread into command line service
+		
 		println("Server now running. Enter commands to maintain.");
 		commandLine();
 	}
@@ -223,17 +229,6 @@ public class Server {
 		errorLog.saveLog();
 		UserDB.saveAll();
 		UserMapping.saveAll();
-	}
-
-
-	/**
-	 * Gets the current log date and returns a string.
-	 * These strings only differ by day.
-	 * @return
-	 */
-	private static String logDate(){
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-		return formatter.format(new Date(System.currentTimeMillis()));
 	}
 
 
@@ -561,11 +556,25 @@ public class Server {
 
 	private final class MaintenanceThread implements Runnable{
 
+		private static final long MILLIS_IN_DAY = 86400000;
+		private long currentDay;
+		
+		public MaintenanceThread(){
+			this.currentDay = System.currentTimeMillis();
+		}
 		@Override
 		public void run() {
 
 			try {
 				Thread.sleep(MAINTENANCE_TIME);
+				
+				//if new day, swap out logs
+				if ((System.currentTimeMillis() - currentDay) > MILLIS_IN_DAY){
+					Thread.sleep(1000);
+					log = new Logger(LOG_FILENAME);
+					errorLog = new Logger(ERROR_LOG_FILENAME);
+				}
+				
 				saveAllFiles();
 				printRecord("--> Maintenance Thread saved all information");
 			} catch (InterruptedException e) {
