@@ -153,8 +153,6 @@ public class Server {
 	private static void messageSlack(String sendURL, String message, String channel){
 		try {
 			
-			
-			
 			CloseableHttpClient slackServer = HttpClients.createDefault();
 			
 			HttpPost slackMessage = new HttpPost(sendURL);
