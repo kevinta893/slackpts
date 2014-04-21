@@ -1,0 +1,37 @@
+How to use
+
+=============
+
+How to setup:
+1. Run the server once to generate the neccesary files. 
+2. Shutdown the server to begin configuration
+3. Open "server_config". Modify the webhook-url field by providing the the Slack incoming webhook given by that integration's setup screen.
+4. Modify other fields as necessiary
+5. Run server again to begin using on Slack.
+
+
+
+
+How to use:
+
+A. Registering
+
+Each user must register their userID in order to use the server. This is simply done using the /register command. 
+Since everyone has a unique userID on Slack that is normally hidden, each user will have only one account on the server. 
+
+If a user changes their username on Slack, then they simply need to use /register again to update their name
+on the server. This is to allow freedom of username changes without losing data.
+
+
+
+B. Tipping
+
+To tip a user with a single unit of point, simply use the command /tip [username] . You can not tip yourself.
+
+
+
+C. Checking points
+
+To check the number of points you currently have, use command /check .
+
+To check the number of points that someone else has, use command /check [username] .
