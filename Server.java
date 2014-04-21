@@ -300,6 +300,7 @@ public class Server {
 
 					if (UserMapping.getInstance().registerPair(userName, userID)){
 						UserMapping.saveAll();
+						
 						log.writeLine("Added " + userName + " as new ID: " + userID);
 
 						//create new user in database
@@ -462,7 +463,8 @@ public class Server {
 
 
 	public static void main(String[] args){
-		//Server.messageSlack("Like this?", "git-blog");
+		Config.getInstance().getCount();
+		Server.messageSlack("Because I can testify!", "general");
 
 	}
 
