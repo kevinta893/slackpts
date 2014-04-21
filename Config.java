@@ -150,9 +150,11 @@ public class Config{
 	 */
 	private static void fillDefaults(){
 		properties.put(WEBHOOK_URL_FIELD, "webhook url here");
+		properties.put(SERVER_PORT_FIELD, "48567");
+		
 		properties.put(BOT_NAME_FIELD, "slackbot");
 		properties.put(CURRENCY_NAME_FIELD, "gold");
-		properties.put(SERVER_PORT_FIELD, "48567");
+		
 	}
 
 	public int getCount(){
@@ -163,6 +165,7 @@ public class Config{
 		return properties.get(WEBHOOK_URL_FIELD);
 	}
 
+	
 	public static String getBotName(){
 		return properties.get(BOT_NAME_FIELD);
 	}

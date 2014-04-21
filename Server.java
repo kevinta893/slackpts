@@ -140,9 +140,16 @@ public class Server {
 	 */
 	private static void messageSlack(String textPost, String channel){
 		System.out.println(textPost);
-
+		
+		String message;
 		//construct the JSON message
-		String message = "payload={\"text\":\"`" + textPost + "`\", \"channel\":\"#" + channel + "\", \"username\": \"" + Config.getBotName() + "\"}";
+		if (channel != null){
+			message = "payload={\"text\":\"`" + textPost + "`\", \"channel\":\"#" + channel + "\", \"username\": \"" + Config.getBotName() + "\"}";
+		}
+		else{
+			message = "payload={\"text\":\"`" + textPost + "`\", \"username\": \"" + Config.getBotName() + "\"}";
+		}
+		 
 
 		//System.out.println(message);
 		try {
@@ -452,6 +459,8 @@ public class Server {
 		String stackTrace = error.toString();
 
 		log.writeLine(message + "\n" + stackTrace);
+		
+		messageSlack("Whoops! I ran into an exception. See my log.", null);
 	}
 
 	/**
@@ -474,7 +483,7 @@ public class Server {
 	/*
 	public static void main(String[] args){
 		Config.getInstance().getCount();
-		Server.messageSlack("Because I can testify!", "general");
+		Server.messageSlack("Exception?", null);
 
 	}
 	 */

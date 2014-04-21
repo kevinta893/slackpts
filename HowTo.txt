@@ -3,10 +3,10 @@ How to use
 =============
 
 How to setup:
-1. Run the server once to generate the neccesary files. 
+1. Run the server once to generate the necessary files. 
 2. Shutdown the server to begin configuration
 3. Open "server_config". Modify the webhook-url field by providing the the Slack incoming webhook given by that integration's setup screen.
-4. Modify other fields as necessiary
+4. Modify other fields as necessary
 5. Run server again to begin using on Slack.
 
 
