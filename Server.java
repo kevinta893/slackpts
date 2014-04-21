@@ -18,7 +18,10 @@ import java.util.regex.Pattern;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.fluent.Request;
+import org.apache.http.client.fluent.Response;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -150,14 +153,22 @@ public class Server {
 	 * @param message
 	 * @param channel
 	 */
-	private static void messageSlack(String sendURL, String message, String channel){
+	private static void messageSlack(String sendURL, String textPost, String channel){
+		
+		//construct the JSON message
+		String message = "payload={\"text\":\"" + textPost + "\", \"channel\":\"#" + channel + "\"}";
+		
+		//System.out.println(message);
 		try {
 			
 			CloseableHttpClient slackServer = HttpClients.createDefault();
 			
 			HttpPost slackMessage = new HttpPost(sendURL);
-			slackMessage.setHeader("Content-Type", "application/json; charset=UTF-8");
+			
+			slackMessage.setHeader("User-Agent", "Slack Points Server");
+			slackMessage.setHeader("content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
 			slackMessage.setEntity(new StringEntity(message));
+
 			HttpResponse response  = slackServer.execute(slackMessage);
 
 			
@@ -206,7 +217,7 @@ public class Server {
 					complete = complete + nextLine;
 					nextLine = buff.readLine();
 				}
-
+				System.out.println(complete);
 				String payload = complete.substring(complete.indexOf("token="));
 
 				//with complete request, find the command sent
@@ -407,9 +418,8 @@ public class Server {
 	
 	
 	public static void main(String[] args){
-		Server.messageSlack("https://awktocreations.slack.com/services/hooks/incoming-webhook?token=sr9pEgsE2mZpvQlSMtMmcOXv", "{\"text\":\"This is a line of text in a channel.\nAnd this is another line of text.\"}", "git-blog");
-		int i =0;
-		i++;
+		Server.messageSlack("https://awktocreations.slack.com/services/hooks/incoming-webhook?token=sr9pEgsE2mZpvQlSMtMmcOXv", "I wonder if I can use emoticons like everyone else... :grin:", "general");
+
 	}
 
 }
