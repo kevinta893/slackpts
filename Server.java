@@ -461,11 +461,11 @@ public class Server {
 
 	
 
-
+/*
 	public static void main(String[] args){
 		Config.getInstance().getCount();
 		Server.messageSlack("Because I can testify!", "general");
 
 	}
-
+*/
 }

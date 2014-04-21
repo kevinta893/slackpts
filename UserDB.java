@@ -23,7 +23,7 @@ public class UserDB {
 
 	public static final long DEFAULT_CASH = 0; 										//default cash value of new user
 
-	public static final String DB_FILE_NAME = "users.txt";
+	public static final String DB_FILE_NAME = "users";
 
 	private static final String DELIM = ",";										//delimiter of each username and points
 
