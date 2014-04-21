@@ -221,15 +221,7 @@ public class Server {
 	}
 
 
-	/**
-	 * Saves all critical files.
-	 */
-	private static void saveAllFiles(){
-		log.saveLog();
-		errorLog.saveLog();
-		UserDB.saveAll();
-		UserMapping.saveAll();
-	}
+	
 
 
 	/**
@@ -585,7 +577,15 @@ public class Server {
 	}
 
 
-
+	/**
+	 * Saves all critical files.
+	 */
+	private static void saveAllFiles(){
+		log.saveLog();
+		errorLog.saveLog();
+		UserDB.saveAll();
+		UserMapping.saveAll();
+	}
 
 
 
