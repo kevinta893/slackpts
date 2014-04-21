@@ -1,27 +1,16 @@
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.BindException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.URL;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.regex.Pattern;
 
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -34,9 +23,11 @@ import org.apache.http.impl.client.HttpClients;
  */
 public class Server {
 
+	public static final String BOT_USERNAME = "slackbot";
+
 	public static final String CURRENCY_NAME = "peeg";
 	public static final int INCREMENT = 1;
-	
+
 
 	//payload tags in Slack POST
 	public static final String PAYLOAD_START = "token=";
@@ -94,7 +85,7 @@ public class Server {
 
 			println("Retriving user database...");
 			println("Found " + UserDB.getInstance().getUserCount() + " users in database.");
-			UserMapping.getInstance().getCount();				//intialize the mapping
+			UserMapping.getInstance().getCount();				//Initialize the mapping
 
 			//if there's no users in the database, warn user to add some
 			if (UserDB.getInstance().getUserCount() == 0){
@@ -115,7 +106,7 @@ public class Server {
 			//create the listen socket
 			try {
 				listenSock = new ServerSocket(port);
-
+				println("Server now running.");
 			} catch (BindException e){
 				System.err.println(e.getMessage());
 				System.err.println("Cannot setup server! Quitting...");
@@ -153,40 +144,42 @@ public class Server {
 	 * @param message
 	 * @param channel
 	 */
-	private static void messageSlack(String sendURL, String textPost, String channel){
+	private static void messageSlack(String textPost, String channel){
+		System.out.println(textPost);
 		
 		//construct the JSON message
-		String message = "payload={\"text\":\"" + textPost + "\", \"channel\":\"#" + channel + "\"}";
-		
+		String message = "payload={\"text\":\"`" + textPost + "`\", \"channel\":\"#" + channel + "\", \"username\": \"" + BOT_USERNAME + "\"}";
+
 		//System.out.println(message);
 		try {
-			
+
 			CloseableHttpClient slackServer = HttpClients.createDefault();
-			
-			HttpPost slackMessage = new HttpPost(sendURL);
-			
+
+			HttpPost slackMessage = new HttpPost(Constants.getSlackWebHook());
+
 			slackMessage.setHeader("User-Agent", "Slack Points Server");
 			slackMessage.setHeader("content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
 			slackMessage.setEntity(new StringEntity(message));
 
 			HttpResponse response  = slackServer.execute(slackMessage);
 
-			
+
 			//print reply from slack server if any.
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			response.getEntity().writeTo(baos);
 			Server.getInstance().println("<Slack Server>: " + (new String(baos.toByteArray())));
-			
+
 			slackServer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		 
 	}
 
-	
-	
-	
-	
+
+
+
+
 
 	/**
 	 * The request handler created when a new request is being made.
@@ -217,12 +210,12 @@ public class Server {
 					complete = complete + nextLine;
 					nextLine = buff.readLine();
 				}
-				System.out.println(complete);
+
 				String payload = complete.substring(complete.indexOf("token="));
 
 				//with complete request, find the command sent
 				String channelName = getTagArg(payload, CHANNEL_NAME_TAG);
-				String channelID = getTagArg(payload, CHANNEL_ID_TAG);
+				//String channelID = getTagArg(payload, CHANNEL_ID_TAG);
 				String userID = getTagArg(payload, USER_ID_TAG);
 				String userName = getTagArg(payload, USER_NAME_TAG);
 				String command = getTagArg(payload, CMD_TAG);
@@ -235,8 +228,8 @@ public class Server {
 					fullCommand = fullCommand + " " + args[i];
 				}
 				println(userName + " issued command: \t"+fullCommand + "\n");
-				
-				
+
+
 
 				if (command.equals(TIP_CMD)){
 					//increment command sent, increment points
@@ -246,15 +239,17 @@ public class Server {
 					if (args.length == 1){
 
 						String targetID = UserMapping.getInstance().getID(args[0]);
+
 						if (targetID != null){
 							if (UserDB.hasUser(targetID)){
 								UserDB.increment(targetID, INCREMENT);
 								log.writeLine(userName + " gave " + args[0] + " " + INCREMENT + CURRENCY_NAME);
+								messageSlack(userName + " gave " + args[0] + " " + INCREMENT + CURRENCY_NAME, channelName);
 							}
 						}
 						else{
-							//TODO no mapping found, return error
-							//"User not recognized! Did that user get an account with the bank of Slack? Get that user to enter the command /register to sign up. If you already have an account, but changed your name please enter the command /register ASAP."
+							//no mapping found, return error
+							messageSlack("I do not recognize who " + args[0] + " is! Did that user get an account with the bank of Slack? Get that user to enter the command /register to sign up. If you already have an account, but changed your name recently please enter the command /register ASAP.", channelName);
 						}
 					}
 
@@ -264,22 +259,43 @@ public class Server {
 				else if (command.equals(CHECK_CMD)){
 					//check command sent, return current points.
 
-					if (args.length == 1){
+					if ((args.length == 1) && (args[0].equals("") == false)){
 
+
+						//get the id of the user
 						String targetID = UserMapping.getInstance().getID(args[0]);
 
 						if(targetID != null){
 							if (UserDB.hasUser(targetID)){
-								User check = UserDB.getUser(args[0]);
+								//user exists, return their count.
+								User check = UserDB.getUser(targetID);
 								String humanName = UserMapping.getInstance().getName(targetID);
-								//messageSlack("", humanName + " has " + check.getPts() + CURRENCY_NAME + ".", channelName);
+								messageSlack(humanName + " has " + check.getPts() + CURRENCY_NAME + ".", channelName);
 							}
 						}
 						else{
-							//TODO no such user exists, report back
-							//messageSlack("","No such user exits", channelName);
+							//no such user exists, report back
+							messageSlack("No such user named " + userName + " exists. Have they registered yet?", channelName);
 						}
 
+					}
+					else if ((args.length == 1) && (args[0].equals("") == true)){
+
+						//get the id of the user
+						String targetID = UserMapping.getInstance().getID(userName);
+						
+						if(targetID != null){
+							if (UserDB.hasUser(targetID)){
+								//user exists, return their count.
+								User check = UserDB.getUser(targetID);
+								String humanName = UserMapping.getInstance().getName(targetID);
+								messageSlack(humanName + " has " + check.getPts() + CURRENCY_NAME + ".", channelName);
+							}
+						}
+						else{
+							//no such user exists, report back
+							messageSlack("Cannot find your record " + userName + ". Have you registered yet?", channelName);
+						}
 					}
 
 				}
@@ -289,23 +305,31 @@ public class Server {
 					if (UserMapping.getInstance().registerPair(userName, userID)){
 						UserMapping.saveAll();
 						log.writeLine("Added " + userName + " as new ID: " + userID);
-						
+
 						//create new user in database
 						UserDB.registerUser(userID);
+						UserDB.saveAll();
+
+
+						messageSlack("Welcome "+ userName + "! You have " + UserDB.getUser(userID).getPts() 
+								+ CURRENCY_NAME + ". Earn more by getting tips from friends.", channelName);
 					}
 					else{
 						String oldName = UserMapping.getInstance().getName(userID);
 						if (UserMapping.getInstance().updateName(oldName, userName)){
 							//successful name update.
-							
+
 							UserMapping.saveAll();
+							
 							log.writeLine("Updated " + oldName + " -> " + userName);
-							//TODO
+
+							messageSlack("Gotcha! I'll remember you as " + userName + " from now on.", channelName);
 						}
 					}
 				}
 				else{
 					//invalid command
+					messageSlack("Sorry I don't understand that command. :frown:", channelName);
 				}
 
 			} catch (IOException e) {
@@ -396,29 +420,29 @@ public class Server {
 
 	}
 
-	
+
 	private static SimpleDateFormat consoleDate = new SimpleDateFormat("HH:mm:ss");
-	
+
 	/**
 	 * Prints a line in the server and in the log. Time stamped
 	 */
 	public void printRecord(String message){
-		 System.out.println("[" + (consoleDate.format(new Date(System.currentTimeMillis()))) + "]: " + message);
-		 log.writeLine(message);
+		System.out.println("[" + (consoleDate.format(new Date(System.currentTimeMillis()))) + "]: " + message);
+		log.writeLine(message);
 	}
-	
+
 	/**
 	 * Prints a line in the server. Time stamped
 	 */
 	public void println(String message){
-		 System.out.println("[" + (consoleDate.format(new Date(System.currentTimeMillis()))) + "]: " + message);
+		System.out.println("[" + (consoleDate.format(new Date(System.currentTimeMillis()))) + "]: " + message);
 	}
-	
-	
-	
-	
+
+
+
+
 	public static void main(String[] args){
-		Server.messageSlack("https://awktocreations.slack.com/services/hooks/incoming-webhook?token=sr9pEgsE2mZpvQlSMtMmcOXv", "I wonder if I can use emoticons like everyone else... :grin:", "general");
+		//Server.messageSlack("Like this?", "git-blog");
 
 	}
 

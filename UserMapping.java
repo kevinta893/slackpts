@@ -115,6 +115,8 @@ public class UserMapping {
 			try {
 				BufferedWriter userFile = new BufferedWriter(new FileWriter(dbfile, false));
 
+				userFile.write(warning + "\n");
+				
 				for (Entry<String,String> pair : nameMapping.entrySet()){
 					userFile.write(pair.getKey() + "," + pair.getValue() + "\n");
 				}
