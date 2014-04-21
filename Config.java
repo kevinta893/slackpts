@@ -19,7 +19,8 @@ import java.util.Map.Entry;
  */
 public class Config{
 
-
+	//private static final int MIN_PORT = 1000;
+	//private static final int MAX_PORT = 65535;
 
 
 
@@ -28,6 +29,9 @@ public class Config{
 
 	
 	private static final String WEBHOOK_URL_FIELD = "webhook-url";
+	private static final String BOT_NAME_FIELD = "bot-name";
+	private static final String CURRENCY_NAME_FIELD = "currency-name";
+	private static final String SERVER_PORT_FIELD = "server-port";
 	
 	private static HashMap<String, String> properties = new HashMap<String, String>();
 
@@ -141,8 +145,14 @@ public class Config{
 		}
 	}
 
+	/**
+	 * Fills the properties with the current defaults
+	 */
 	private static void fillDefaults(){
 		properties.put(WEBHOOK_URL_FIELD, "webhook url here");
+		properties.put(BOT_NAME_FIELD, "slackbot");
+		properties.put(CURRENCY_NAME_FIELD, "gold");
+		properties.put(SERVER_PORT_FIELD, "48567");
 	}
 
 	public int getCount(){
@@ -153,6 +163,16 @@ public class Config{
 		return properties.get(WEBHOOK_URL_FIELD);
 	}
 
+	public static String getBotName(){
+		return properties.get(BOT_NAME_FIELD);
+	}
 
+	public static String getCurrencyName(){
+		return properties.get(CURRENCY_NAME_FIELD);
+	}
+	
+	public static int getPort(){
+		return Integer.parseInt(properties.get(SERVER_PORT_FIELD));
+	}
 
 }

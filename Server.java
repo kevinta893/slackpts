@@ -25,9 +25,6 @@ import org.apache.http.impl.client.HttpClients;
  */
 public class Server {
 
-	public static final String BOT_USERNAME = "slackbot";
-
-	public static final String CURRENCY_NAME = "peeg";
 	public static final int INCREMENT = 1;
 
 
@@ -47,7 +44,6 @@ public class Server {
 	public static final String REGISTER_CMD = "%2Fregister";
 
 
-	private static final int DEFAULT_PORT = 48567;
 	private static ServerSocket listenSock;
 
 	private static volatile Logger log;
@@ -68,19 +64,12 @@ public class Server {
 
 	private Server(){}
 
-	/**
-	 * Starts the server on the DEFAULT_PORT port.
-	 */
-	public void startServer(){
-		startServer(DEFAULT_PORT);
-	}
 
 	/**
-	 * Starts the server, binds all resourc. If an instance has already is or has been
+	 * Starts the server, binds all resources. If an instance has already is or has been
 	 * running, then nothing happens.
-	 * @param port The server point to use while running
 	 */
-	public void startServer(int port){
+	public void startServer(){
 
 		//run only if the current thread is not created. Single instance
 		if (acceptThread == null){
@@ -103,14 +92,14 @@ public class Server {
 			println("Log started in file: " + log.getFileName());
 
 			
-			println("Starting server on port " + port + "...");
+			println("Starting server on port " + Config.getPort() + "...");
 			System.out.println("\n=====================================================");
 
 
 
 			//create the listen socket
 			try {
-				listenSock = new ServerSocket(port);
+				listenSock = new ServerSocket(Config.getPort());
 				println("Server now running.");
 			} catch (BindException e){
 				System.err.println(e.getMessage());
@@ -153,7 +142,7 @@ public class Server {
 		System.out.println(textPost);
 		
 		//construct the JSON message
-		String message = "payload={\"text\":\"`" + textPost + "`\", \"channel\":\"#" + channel + "\", \"username\": \"" + BOT_USERNAME + "\"}";
+		String message = "payload={\"text\":\"`" + textPost + "`\", \"channel\":\"#" + channel + "\", \"username\": \"" + Config.getBotName() + "\"}";
 
 		//System.out.println(message);
 		try {
@@ -250,8 +239,8 @@ public class Server {
 						if (targetID != null){
 							if (UserDB.hasUser(targetID)){
 								UserDB.increment(targetID, INCREMENT);
-								log.writeLine(userName + " gave " + args[0] + " " + INCREMENT + CURRENCY_NAME);
-								messageSlack(userName + " gave " + args[0] + " " + INCREMENT + CURRENCY_NAME, channelName);
+								log.writeLine(userName + " gave " + args[0] + " " + INCREMENT + Config.getCurrencyName());
+								messageSlack(userName + " gave " + args[0] + " " + INCREMENT + Config.getCurrencyName(), channelName);
 							}
 						}
 						else{
@@ -277,7 +266,7 @@ public class Server {
 								//user exists, return their count.
 								User check = UserDB.getUser(targetID);
 								String humanName = UserMapping.getInstance().getName(targetID);
-								messageSlack(humanName + " has " + check.getPts() + CURRENCY_NAME + ".", channelName);
+								messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
 							}
 						}
 						else{
@@ -296,7 +285,7 @@ public class Server {
 								//user exists, return their count.
 								User check = UserDB.getUser(targetID);
 								String humanName = UserMapping.getInstance().getName(targetID);
-								messageSlack(humanName + " has " + check.getPts() + CURRENCY_NAME + ".", channelName);
+								messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
 							}
 						}
 						else{
@@ -319,7 +308,7 @@ public class Server {
 
 
 						messageSlack("Welcome "+ userName + "! You have " + UserDB.getUser(userID).getPts() 
-								+ CURRENCY_NAME + ". Earn more by getting tips from friends.", channelName);
+								+ Config.getCurrencyName() + ". Earn more by getting tips from friends.", channelName);
 					}
 					else{
 						String oldName = UserMapping.getInstance().getName(userID);
