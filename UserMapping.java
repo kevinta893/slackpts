@@ -64,7 +64,7 @@ public class UserMapping {
 			String[] tokens;
 			while (nextLine != null){
 
-				tokens = nextLine.split(DELIM);
+				tokens = nextLine.split(DELIM,2);
 
 				if (tokens.length == 2){
 					//exactly two values, then 
@@ -118,7 +118,7 @@ public class UserMapping {
 				userFile.write(warning + "\n");
 				
 				for (Entry<String,String> pair : nameMapping.entrySet()){
-					userFile.write(pair.getKey() + "," + pair.getValue() + "\n");
+					userFile.write(pair.getKey() + DELIM + pair.getValue() + "\n");
 				}
 
 				userFile.flush();

@@ -2,6 +2,8 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -83,6 +85,9 @@ public class Server {
 		//run only if the current thread is not created. Single instance
 		if (acceptThread == null){
 
+			println("Getting configuration settings...");
+			Config.getInstance().getCount();
+			
 			println("Retriving user database...");
 			println("Found " + UserDB.getInstance().getUserCount() + " users in database.");
 			UserMapping.getInstance().getCount();				//Initialize the mapping
@@ -97,9 +102,9 @@ public class Server {
 			log = new Logger("log" + logDate() + ".txt");
 			println("Log started in file: " + log.getFileName());
 
-			System.out.println("\n=====================================================");
+			
 			println("Starting server on port " + port + "...");
-
+			System.out.println("\n=====================================================");
 
 
 
@@ -155,7 +160,7 @@ public class Server {
 
 			CloseableHttpClient slackServer = HttpClients.createDefault();
 
-			HttpPost slackMessage = new HttpPost(Constants.getSlackWebHook());
+			HttpPost slackMessage = new HttpPost(Config.getSlackWebHook());
 
 			slackMessage.setHeader("User-Agent", "Slack Points Server");
 			slackMessage.setHeader("content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
@@ -170,8 +175,10 @@ public class Server {
 			Server.getInstance().println("<Slack Server>: " + (new String(baos.toByteArray())));
 
 			slackServer.close();
+		} catch (UnknownHostException e){
+			printException(e);
 		} catch (IOException e) {
-			e.printStackTrace();
+			printException(e);
 		}
 		 
 	}
@@ -294,7 +301,7 @@ public class Server {
 						}
 						else{
 							//no such user exists, report back
-							messageSlack("Cannot find your record " + userName + ". Have you registered yet?", channelName);
+							messageSlack("I cannot find your record " + userName + ". Have you registered yet?", channelName);
 						}
 					}
 
@@ -333,14 +340,14 @@ public class Server {
 				}
 
 			} catch (IOException e) {
-				e.printStackTrace();
+				printException(e);
 			}
 			finally{
 				//always close the client
 				try {
 					client.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					printException(e);
 				}
 			}
 
@@ -412,7 +419,7 @@ public class Server {
 					Thread clientHandler = new Thread(new RequestHandler(client));
 					clientHandler.run();
 				} catch (IOException e) {
-					e.printStackTrace();
+					printException(e);
 				}
 			}
 
@@ -423,11 +430,35 @@ public class Server {
 
 	private static SimpleDateFormat consoleDate = new SimpleDateFormat("HH:mm:ss");
 
+	private static String timeStamp(){
+		return "[" + (consoleDate.format(new Date(System.currentTimeMillis()))) + "]: ";
+	}
+	
+	/**
+	 * Prints out an exception when it occurs. Only the stack
+	 * trace is printed to the log. But an occurance is shown
+	 * in both the console and the log.
+	 * @param e
+	 */
+	public static void printException(Exception e){
+		String message = timeStamp() + "Exception occurred. " + UnknownHostException.class.getName() + ": " + e.getMessage() +
+				" --Please see log for stack trace--";
+		System.err.println(message);
+		
+		
+		//Convert stack trace into string and print to log
+		StringWriter error = new StringWriter();
+		e.printStackTrace(new PrintWriter(error));
+		String stackTrace = error.toString();
+		
+		log.writeLine(message + "\n" + stackTrace);
+	}
+	
 	/**
 	 * Prints a line in the server and in the log. Time stamped
 	 */
-	public void printRecord(String message){
-		System.out.println("[" + (consoleDate.format(new Date(System.currentTimeMillis()))) + "]: " + message);
+	public static void printRecord(String message){
+		System.out.println(timeStamp() + message);
 		log.writeLine(message);
 	}
 
@@ -435,10 +466,10 @@ public class Server {
 	 * Prints a line in the server. Time stamped
 	 */
 	public void println(String message){
-		System.out.println("[" + (consoleDate.format(new Date(System.currentTimeMillis()))) + "]: " + message);
+		System.out.println(timeStamp() + message);
 	}
 
-
+	
 
 
 	public static void main(String[] args){

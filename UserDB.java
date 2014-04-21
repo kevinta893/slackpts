@@ -66,7 +66,7 @@ public class UserDB {
 			String[] tokens;
 			while (nextLine != null){
 
-				tokens = nextLine.split(DELIM);
+				tokens = nextLine.split(DELIM,2);
 
 				if (tokens.length == 2){
 					//exactly two values, then 
@@ -125,7 +125,7 @@ public class UserDB {
 				BufferedWriter userFile = new BufferedWriter(new FileWriter(dbfile, false));
 
 				for (User user : masterList.values()){
-					userFile.write(user.getName() + "," + user.getPts() + "\n");
+					userFile.write(user.getName() + DELIM + user.getPts() + "\n");
 				}
 
 				userFile.flush();
