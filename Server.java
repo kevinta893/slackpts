@@ -76,7 +76,7 @@ public class Server {
 
 			println("Getting configuration settings...");
 			Config.getInstance().getCount();
-			
+
 			println("Retriving user database...");
 			println("Found " + UserDB.getInstance().getUserCount() + " users in database.");
 			UserMapping.getInstance().getCount();				//Initialize the mapping
@@ -91,7 +91,7 @@ public class Server {
 			log = new Logger("log" + logDate() + ".txt");
 			println("Log started in file: " + log.getFileName());
 
-			
+
 			println("Starting server on port " + Config.getPort() + "...");
 			System.out.println("\n=====================================================");
 
@@ -140,7 +140,7 @@ public class Server {
 	 */
 	private static void messageSlack(String textPost, String channel){
 		System.out.println(textPost);
-		
+
 		//construct the JSON message
 		String message = "payload={\"text\":\"`" + textPost + "`\", \"channel\":\"#" + channel + "\", \"username\": \"" + Config.getBotName() + "\"}";
 
@@ -169,7 +169,7 @@ public class Server {
 		} catch (IOException e) {
 			printException(e);
 		}
-		 
+
 	}
 
 
@@ -238,9 +238,19 @@ public class Server {
 
 						if (targetID != null){
 							if (UserDB.hasUser(targetID)){
-								UserDB.increment(targetID, INCREMENT);
-								log.writeLine(userName + " gave " + args[0] + " " + INCREMENT + Config.getCurrencyName());
-								messageSlack(userName + " gave " + args[0] + " " + INCREMENT + Config.getCurrencyName(), channelName);
+
+
+								if (targetID.equals(userID) == false){
+									//not self, do tipping
+
+									UserDB.increment(targetID, INCREMENT);
+									log.writeLine(userName + " gave " + args[0] + " " + INCREMENT + Config.getCurrencyName());
+									messageSlack(userName + " gave " + args[0] + " " + INCREMENT + Config.getCurrencyName(), channelName);
+								}
+								else{
+									//error, cannot tip self.
+									messageSlack("You cannot tip yourself " + userName + "!", channelName);
+								}
 							}
 						}
 						else{
@@ -279,7 +289,7 @@ public class Server {
 
 						//get the id of the user
 						String targetID = UserMapping.getInstance().getID(userName);
-						
+
 						if(targetID != null){
 							if (UserDB.hasUser(targetID)){
 								//user exists, return their count.
@@ -300,7 +310,7 @@ public class Server {
 
 					if (UserMapping.getInstance().registerPair(userName, userID)){
 						UserMapping.saveAll();
-						
+
 						log.writeLine("Added " + userName + " as new ID: " + userID);
 
 						//create new user in database
@@ -317,7 +327,7 @@ public class Server {
 							//successful name update.
 
 							UserMapping.saveAll();
-							
+
 							log.writeLine("Updated " + oldName + " -> " + userName);
 
 							messageSlack("Gotcha! I'll remember you as " + userName + " from now on.", channelName);
@@ -423,7 +433,7 @@ public class Server {
 	private static String timeStamp(){
 		return "[" + (consoleDate.format(new Date(System.currentTimeMillis()))) + "]: ";
 	}
-	
+
 	/**
 	 * Prints out an exception when it occurs. Only the stack
 	 * trace is printed to the log. But an occurance is shown
@@ -434,16 +444,16 @@ public class Server {
 		String message = timeStamp() + "Exception occurred. " + UnknownHostException.class.getName() + ": " + e.getMessage() +
 				" --Please see log for stack trace--";
 		System.err.println(message);
-		
-		
+
+
 		//Convert stack trace into string and print to log
 		StringWriter error = new StringWriter();
 		e.printStackTrace(new PrintWriter(error));
 		String stackTrace = error.toString();
-		
+
 		log.writeLine(message + "\n" + stackTrace);
 	}
-	
+
 	/**
 	 * Prints a line in the server and in the log. Time stamped
 	 */
@@ -459,13 +469,13 @@ public class Server {
 		System.out.println(timeStamp() + message);
 	}
 
-	
 
-/*
+
+	/*
 	public static void main(String[] args){
 		Config.getInstance().getCount();
 		Server.messageSlack("Because I can testify!", "general");
 
 	}
-*/
+	 */
 }
