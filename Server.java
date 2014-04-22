@@ -583,6 +583,9 @@ public class Server {
 				if ((today.get(Calendar.HOUR_OF_DAY) == HOUR_WINDOW) && 
 						(today.get(Calendar.MINUTE) >= MINUTE_WINDOW_MIN) && (today.get(Calendar.MINUTE) <= MINUTE_WINDOW_MAX)){
 					
+					printRecord("--> Maintenance thread now saving new log for the day.");
+					
+					
 					log = new Logger(LOG_FILENAME);
 					errorLog = new Logger(ERROR_LOG_FILENAME);
 				}
@@ -659,7 +662,7 @@ public class Server {
 
 
 	
-	
+	/*
 	public static void main(String[] args){
 		Server.messageSlack("New \nLine", null);
 		
@@ -670,5 +673,5 @@ public class Server {
 		System.out.print(convert);
 
 	}
-	 
+	 */
 }
