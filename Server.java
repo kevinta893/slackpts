@@ -238,7 +238,7 @@ public class Server {
 		//System.out.println(textPost);
 
 		//convert all new lines into proper characters
-		textPost = textPost.replaceAll("\n", "\\\\n");
+		textPost = textPost.replaceAll("\n", "`\\\\n`");
 		
 		if(silent == false){
 			String message;
@@ -661,7 +661,7 @@ public class Server {
 	
 	
 	public static void main(String[] args){
-		//Server.messageSlack("New\\nLine", null);
+		Server.messageSlack("New \nLine", null);
 		
 		String derp = "f%2ff";
 		
