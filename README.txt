@@ -2,7 +2,7 @@ slackpts
 ========
 
 
-The slack points server!
+The Slack Points server!
 
 Uses simple HTTP POST requests to and from a webhook sent by Slack. The server simply keeps track
 of users with a point system. The server is also able to talk back to Slack given the proper
