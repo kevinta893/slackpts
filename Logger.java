@@ -31,7 +31,8 @@ public class Logger {
 		this.filename = filename;
 		
 		//create the log file, append to existing
-		File logFile = new File(filename + " - " + dateStamp() + ".txt");
+		this.filename = filename + " - " + dateStamp() + ".txt";
+		File logFile = new File(this.filename);
 		
 		try {
 			boolean exists = logFile.exists();			//check if file already exists prior to creating

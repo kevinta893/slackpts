@@ -80,7 +80,7 @@ public class Config{
 				if (tokens.length == 2){
 					//exactly two values, then 
 					tokens[0] = tokens[0].trim();		//field name
-					tokens[1] = tokens[1].trim();		//value
+					//tokens[1] = tokens[1].trim();		//value
 
 					if ((tokens[0] != null) && (tokens[1] != null) && (tokens[0].length() >= 1) && (tokens[1].length() >= 1)){
 

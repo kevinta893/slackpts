@@ -9,6 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Scanner;
 
@@ -60,9 +61,9 @@ public class Server {
 
 	//threads
 	private static Thread acceptThread;
-	private static Thread maintanenceThread;
+	private static Thread maintanenceThread;					//see Maintenence Thread for maintentence interval
 
-	private static final int MAINTENANCE_TIME = 300000; 		//every 5 minutes, run maintenance thread.
+	
 
 
 	private static boolean running = true;						//server running or not
@@ -551,13 +552,21 @@ public class Server {
 
 
 	private final class MaintenanceThread implements Runnable{
-
-		private static final long MILLIS_IN_DAY = 86400000;
-		private long currentDay;
+		
+		private static final int MAINTENANCE_TIME = 300000; 		//every 5 minutes, run maintenance thread.
+		
+		
+		//the time to reset the logs.  Write new log at about 12:05 am. (aka 0:05)
+		private static final int HOUR_WINDOW = 0;
+		private static final int MINUTE_WINDOW_MIN = 5;
+		private static final int MINUTE_WINDOW_MAX = 10;
+		
 		
 		public MaintenanceThread(){
-			this.currentDay = System.currentTimeMillis();
+			
 		}
+		
+		
 		@Override
 		public void run() {
 
@@ -565,8 +574,10 @@ public class Server {
 				Thread.sleep(MAINTENANCE_TIME);
 				
 				//if new day, swap out logs
-				if ((System.currentTimeMillis() - currentDay) > MILLIS_IN_DAY){
-					Thread.sleep(1000);
+				Calendar today = Calendar.getInstance();
+				if ((today.get(Calendar.HOUR_OF_DAY) == HOUR_WINDOW) && 
+						(today.get(Calendar.MINUTE) >= MINUTE_WINDOW_MIN) && (today.get(Calendar.MINUTE) <= MINUTE_WINDOW_MAX)){
+					
 					log = new Logger(LOG_FILENAME);
 					errorLog = new Logger(ERROR_LOG_FILENAME);
 				}
@@ -640,11 +651,10 @@ public class Server {
 
 
 
-	/*
+	
 	public static void main(String[] args){
-		Config.getInstance().getCount();
-		Server.messageSlack("Error! Insufficient Veto power. I belong to general-armstrong now.", "random");
+		Server.messageSlack("New\\nLine", "git-blog");
 
 	}
-	 */
+	 
 }
