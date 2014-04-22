@@ -356,8 +356,9 @@ public class Server {
 										//not self, do tipping
 
 										UserDB.increment(targetID, INCREMENT);
-										log.writeLine(userName + " gave " + args[0] + INCREMENT + Config.getCurrencyName());
-										messageSlack(userName + " gave " + args[0] + INCREMENT + Config.getCurrencyName(), channelName);
+										String confirmMessage = userName + " gave " + args[0] + " " + INCREMENT + Config.getCurrencyName();
+										log.writeLine(confirmMessage);
+										messageSlack(confirmMessage, channelName);
 									}
 									else{
 										//error, cannot tip self.
