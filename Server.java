@@ -382,7 +382,7 @@ public class Server {
 									//user exists, return their count.
 									User check = UserDB.getUser(targetID);
 									String humanName = UserMapping.getName(targetID);
-									messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
+									messageSlack(humanName + " has " + check.getPts() + " " + Config.getCurrencyName() + ".", channelName);
 								}
 							}
 							else{
@@ -401,7 +401,7 @@ public class Server {
 									//user exists, return their count.
 									User check = UserDB.getUser(targetID);
 									String humanName = UserMapping.getName(targetID);
-									messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
+									messageSlack(humanName + " has " + check.getPts() + " " + Config.getCurrencyName() + ".", channelName);
 								}
 							}
 							else{
