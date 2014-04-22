@@ -41,9 +41,9 @@ public class Server {
 
 
 	//custom commands.
-	public static final String TIP_CMD = "%2Ftip";
-	public static final String CHECK_CMD = "%2Fcheck";
-	public static final String REGISTER_CMD = "%2Fregister";
+	public static final String TIP_CMD = "/tip";
+	public static final String CHECK_CMD = "/check";
+	public static final String REGISTER_CMD = "/register";
 
 
 
@@ -237,6 +237,9 @@ public class Server {
 	private static void messageSlack(String textPost, String channel){
 		//System.out.println(textPost);
 
+		//convert all new lines into proper characters
+		textPost = textPost.replaceAll("\n", "\\\\n");
+		
 		if(silent == false){
 			String message;
 			//construct the JSON message
@@ -316,12 +319,14 @@ public class Server {
 
 					String payload = complete.substring(complete.indexOf("token="));
 
+					//convert payload into proper text
+					
 					//with complete request, find the command sent
 					String channelName = getTagArg(payload, CHANNEL_NAME_TAG);
 					//String channelID = getTagArg(payload, CHANNEL_ID_TAG);
 					String userID = getTagArg(payload, USER_ID_TAG);
 					String userName = getTagArg(payload, USER_NAME_TAG);
-					String command = getTagArg(payload, CMD_TAG);
+					String command = getTagArg(payload, CMD_TAG).replaceAll("%2F", "/");			//replace "%2f" with forward slash
 					String[] args = getTextArgs(payload);								//arguements of the command
 
 
@@ -351,8 +356,8 @@ public class Server {
 										//not self, do tipping
 
 										UserDB.increment(targetID, INCREMENT);
-										log.writeLine(userName + " gave " + args[0] + " " + INCREMENT + Config.getCurrencyName());
-										messageSlack(userName + " gave " + args[0] + " " + INCREMENT + Config.getCurrencyName(), channelName);
+										log.writeLine(userName + " gave " + args[0] + INCREMENT + Config.getCurrencyName());
+										messageSlack(userName + " gave " + args[0] + INCREMENT + Config.getCurrencyName(), channelName);
 									}
 									else{
 										//error, cannot tip self.
@@ -383,7 +388,7 @@ public class Server {
 									//user exists, return their count.
 									User check = UserDB.getUser(targetID);
 									String humanName = UserMapping.getName(targetID);
-									messageSlack(humanName + " has " + check.getPts() + " " + Config.getCurrencyName() + ".", channelName);
+									messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
 								}
 							}
 							else{
@@ -402,7 +407,7 @@ public class Server {
 									//user exists, return their count.
 									User check = UserDB.getUser(targetID);
 									String humanName = UserMapping.getName(targetID);
-									messageSlack(humanName + " has " + check.getPts() + " " + Config.getCurrencyName() + ".", channelName);
+									messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
 								}
 							}
 							else{
@@ -582,6 +587,8 @@ public class Server {
 					errorLog = new Logger(ERROR_LOG_FILENAME);
 				}
 				
+				
+				//maintain server here
 				saveAllFiles();
 				printRecord("--> Maintenance Thread saved all information");
 			} catch (InterruptedException e) {
@@ -652,8 +659,15 @@ public class Server {
 
 
 	
+	
 	public static void main(String[] args){
-		Server.messageSlack("New\\nLine", "git-blog");
+		//Server.messageSlack("New\\nLine", null);
+		
+		String derp = "f%2ff";
+		
+		String convert = derp.replaceAll("%2f", "/");
+		
+		System.out.print(convert);
 
 	}
 	 
