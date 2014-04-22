@@ -335,8 +335,8 @@ public class Server {
 					for (int i =0; i < args.length; i++){
 						fullCommand = fullCommand + " " + args[i];
 					}
-					println("<SLACK_CMD> " + userName + " issued command: \t"+fullCommand );
-
+					printRecord("<SLACK_CMD> " + userName + " issued command: \t"+fullCommand );
+					
 
 
 					if (command.equals(TIP_CMD)){
