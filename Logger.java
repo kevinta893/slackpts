@@ -41,7 +41,9 @@ public class Logger {
 			
 			if(exists == true){
 				this.writeLine("Log already exists, continuing log file...");
+				writer.flush();
 			}
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("Error! Cannot create the log file: " + filename);

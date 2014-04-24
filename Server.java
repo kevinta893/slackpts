@@ -356,7 +356,7 @@ public class Server {
 										//not self, do tipping
 
 										UserDB.increment(targetID, INCREMENT);
-										String confirmMessage = userName + " gave " + args[0] + " " + INCREMENT + Config.getCurrencyName();
+										String confirmMessage = args[0] + " gained " + INCREMENT + Config.getCurrencyName();
 										log.writeLine(confirmMessage);
 										messageSlack(confirmMessage, channelName);
 									}
@@ -565,7 +565,7 @@ public class Server {
 		//the time to reset the logs.  Write new log at about 12:05 am. (aka 0:05)
 		private static final int HOUR_WINDOW = 0;
 		private static final int MINUTE_WINDOW_MIN = 5;
-		private static final int MINUTE_WINDOW_MAX = 10;
+		private static final int MINUTE_WINDOW_MAX = 12;
 		
 		
 		public MaintenanceThread(){
@@ -586,9 +586,17 @@ public class Server {
 					
 					printRecord("--> Maintenance thread now saving new log for the day.");
 					
+					//save old logs
+					log.saveLog();
+					errorLog.saveLog();
 					
+					//swtich to new ones.
 					log = new Logger(LOG_FILENAME);
 					errorLog = new Logger(ERROR_LOG_FILENAME);
+					
+					//save both logs
+					log.saveLog();
+					errorLog.saveLog();
 				}
 				
 				
@@ -663,16 +671,24 @@ public class Server {
 
 
 	
-	/*
+	
 	public static void main(String[] args){
-		Server.messageSlack("New \nLine", null);
+		//Server.messageSlack("New \nLine", null);
 		
 		String derp = "f%2ff";
 		
 		String convert = derp.replaceAll("%2f", "/");
 		
-		System.out.print(convert);
+		System.out.println(convert);
 
+		Calendar d = Calendar.getInstance();
+		d.add(Calendar.HOUR_OF_DAY, 6);
+		d.add(Calendar.MINUTE, -15);
+		if ((d.get(Calendar.HOUR_OF_DAY) == 0) && 
+				(d.get(Calendar.MINUTE) >= 5) && (d.get(Calendar.MINUTE) <= 10)){
+		System.out.println(d.get(Calendar.HOUR_OF_DAY));
+		}
+		
 	}
-	 */
+	 
 }
