@@ -339,10 +339,13 @@ public class Server {
 					}
 					printRecord("<SLACK_CMD> " + req.getUserName() + " issued command: \t" + fullCommand);
 
+					
+					boolean didSomething = false;
 					for (Command com : commands){
 						
 						//go through each command and see if they apply
 						if (com.isCommand(req.getCommand())){
+							didSomething = true;
 							CmdResult cmdResult = com.doRequest(req);
 							
 							if (cmdResult == CmdResult.SUCCESS){
@@ -370,10 +373,14 @@ public class Server {
 						}
 					}
 					
+					if (didSomething == false){
+						messageSlack("Sorry I don't understand that command. :frown:", req.getChannelName());
+					}
+					
 
 					if (command.equals(TIP_CMD)){
 						
-						}
+					}
 
 
 
@@ -415,7 +422,7 @@ public class Server {
 					}
 					else{
 						//invalid command
-						messageSlack("Sorry I don't understand that command. :frown:", channelName);
+						
 					}
 				}
 			} catch (IOException e) {

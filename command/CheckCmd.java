@@ -6,7 +6,7 @@ import server.UserDB;
 import server.UserMapping;
 
 public class CheckCmd extends Command {
-	private static final String COMMAND = "";
+	private static final String COMMAND = "/check";
 
 
 	private String returnMessage;
@@ -25,6 +25,7 @@ public class CheckCmd extends Command {
 	public CmdResult doRequest(RequestStruct req) {
 		String[] args = req.getArgs();
 		returnChannel = req.getChannelName();
+		
 		//check command sent, return current points.
 
 		if ((args.length == 1) && (args[0].equals("") == false)){
@@ -38,35 +39,39 @@ public class CheckCmd extends Command {
 					//user exists, return their count.
 					User check = UserDB.getUser(targetID);
 					String humanName = UserMapping.getName(targetID);
-					messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
+					returnMessage = humanName + " has " + check.getPts() + Config.getCurrencyName() + ".";
+					return CmdResult.SUCCESS;
 				}
 			}
 			else{
 				//no such user exists, report back
-				messageSlack("No such user named " + userName + " exists. Have they registered yet?", channelName);
+				returnMessage = "No such user named " + req.getUserName() + " exists. Have they registered yet?";
+				return CmdResult.SUCCESS;
 			}
 
 		}
 		else if ((args.length == 1) && (args[0].equals("") == true)){
 
 			//get the id of the user
-			String targetID = UserMapping.getID(userName);
+			String targetID = UserMapping.getID(req.getUserName());
 
 			if(targetID != null){
 				if (UserDB.hasUser(targetID)){
 					//user exists, return their count.
 					User check = UserDB.getUser(targetID);
 					String humanName = UserMapping.getName(targetID);
-					messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
+					returnMessage = humanName + " has " + check.getPts() + Config.getCurrencyName() + ".";
+					return CmdResult.SUCCESS;
 				}
 			}
 			else{
 				//no such user exists, report back
-				messageSlack("I cannot find your record " + userName + ". Have you registered yet?", channelName);
+				returnMessage = "I cannot find your record " + req.getUserName() + ". Have you registered yet?";
+				return CmdResult.SUCCESS;
 			}
 		}
 
-		return CmdResult.SUCCESS;
+		return CmdResult.INVALID;
 	}
 
 

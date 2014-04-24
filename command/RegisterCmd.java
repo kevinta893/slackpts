@@ -1,32 +1,26 @@
 package command;
 
+public class RegisterCmd extends Command{
 
-/**
- * Template class. Should be used as a template only.
- * @author Kevin
- *
- */
-public final class Template extends Command {
+	private static final String COMMAND = "/register";
 
-	private static final String COMMAND = "";
-	
-	
+
 	private String returnMessage;
 	private String returnChannel;
 	private String logMessage;
 	private String errorMessage;
-	
-	
-	public Template() {
+
+
+	public RegisterCmd() {
 		super(COMMAND);
-		
+
 	}
 
 
 	@Override
 	public CmdResult doRequest(RequestStruct req) {
 		returnChannel = req.getChannelName();
-		
+
 		return CmdResult.INVALID;
 	}
 
@@ -53,5 +47,4 @@ public final class Template extends Command {
 	public String getErrorMessage() {
 		return errorMessage;
 	}
-
 }

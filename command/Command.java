@@ -2,7 +2,7 @@ package command;
 
 public abstract class Command {
 
-	public final String commandName;
+	public final String commandName;			//the command name as seen on slack. should be in lower case only.
 	
 	
 	
