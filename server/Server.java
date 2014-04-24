@@ -274,7 +274,7 @@ public class Server {
 				//print reply from slack server if any.
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				response.getEntity().writeTo(baos);
-				println("<Slack Server>: " + (new String(baos.toByteArray())));
+				println("<Slack Reply>: " + (new String(baos.toByteArray())));
 
 				slackServer.close();
 			} catch (UnknownHostException e){
