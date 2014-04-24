@@ -49,24 +49,24 @@ public class Server {
 
 	private static ServerSocket listenSock;
 
-	
-	
-	
+
+
+
 	//loggers
 	private static volatile Logger log;
 	private static volatile Logger errorLog;
-	
+
 	private static final String LOG_FOLDER = "logs";
 	private static final String ERROR_LOG_FOLDER = LOG_FOLDER;
 	private static final String LOG_FILENAME = "log";
 	private static final String ERROR_LOG_FILENAME = "errorLog";
-	
+
 
 	//threads
 	private static Thread acceptThread;
 	private static Thread maintanenceThread;					//see Maintenence Thread for maintentence interval
 
-	
+
 
 
 	private static boolean running = true;						//server running or not
@@ -144,14 +144,14 @@ public class Server {
 			acceptThread.start();
 
 			//startTime = new Date(System.currentTimeMillis());							//server actually starts running here.
-			
+
 			maintanenceThread = new Thread(new MaintenanceThread());
 			maintanenceThread.start();
 		}
 
 
 		//move this thread into command line service
-		
+
 		println("Server now running. Enter commands to maintain.");
 		commandLine();
 	}
@@ -229,7 +229,7 @@ public class Server {
 	}
 
 
-	
+
 
 
 	/**
@@ -242,7 +242,7 @@ public class Server {
 
 		//convert all new lines into proper characters
 		textPost = textPost.replaceAll("\n", "`\\\\n`");
-		
+
 		if(silent == false){
 			String message;
 			//construct the JSON message
@@ -323,7 +323,7 @@ public class Server {
 					String payload = complete.substring(complete.indexOf("token="));
 
 					//convert payload into proper text
-					
+
 					//with complete request, find the command sent
 					String channelName = getTagArg(payload, CHANNEL_NAME_TAG);
 					//String channelID = getTagArg(payload, CHANNEL_ID_TAG);
@@ -339,7 +339,7 @@ public class Server {
 						fullCommand = fullCommand + " " + args[i];
 					}
 					printRecord("<SLACK_CMD> " + userName + " issued command: \t"+fullCommand );
-					
+
 
 
 					if (command.equals(TIP_CMD)){
@@ -561,53 +561,56 @@ public class Server {
 
 
 	private final class MaintenanceThread implements Runnable{
-		
+
 		private static final int MAINTENANCE_TIME = 300000; 		//every 5 minutes, run maintenance thread.
-		
-		
+
+
 		//the time to reset the logs.  Write new log at about 12:05 am. (aka 0:05)
 		private static final int HOUR_WINDOW = 0;
 		private static final int MINUTE_WINDOW_MIN = 5;
-		private static final int MINUTE_WINDOW_MAX = 12;
-		
-		
+		private static final int MINUTE_WINDOW_MAX = 11;
+
+
 		public MaintenanceThread(){
-			
+
 		}
-		
-		
+
+
 		@Override
 		public void run() {
 
-			try {
-				Thread.sleep(MAINTENANCE_TIME);
-				
-				//if new day, swap out logs
-				Calendar today = Calendar.getInstance();
-				if ((today.get(Calendar.HOUR_OF_DAY) == HOUR_WINDOW) && 
-						(today.get(Calendar.MINUTE) >= MINUTE_WINDOW_MIN) && (today.get(Calendar.MINUTE) <= MINUTE_WINDOW_MAX)){
-					
-					printRecord("--> Maintenance thread now saving new log for the day.");
-					
-					//save old logs
-					log.saveLog();
-					errorLog.saveLog();
-					
-					//swtich to new ones.
-					log = new Logger(LOG_FOLDER, LOG_FILENAME);
-					errorLog = new Logger(ERROR_LOG_FOLDER, ERROR_LOG_FILENAME);
-					
-					//save both logs
-					log.saveLog();
-					errorLog.saveLog();
+
+			while (running == true){
+				try {
+					Thread.sleep(MAINTENANCE_TIME);
+
+					//if new day, swap out logs
+					Calendar today = Calendar.getInstance();
+					if ((today.get(Calendar.HOUR_OF_DAY) == HOUR_WINDOW) && 
+							(today.get(Calendar.MINUTE) >= MINUTE_WINDOW_MIN) && (today.get(Calendar.MINUTE) <= MINUTE_WINDOW_MAX)){
+
+						printRecord("--> Maintenance thread now saving new log for the day.");
+
+						//save old logs
+						log.saveLog();
+						errorLog.saveLog();
+
+						//swtich to new ones.
+						log = new Logger(LOG_FOLDER, LOG_FILENAME);
+						errorLog = new Logger(ERROR_LOG_FOLDER, ERROR_LOG_FILENAME);
+
+						//save both logs
+						log.saveLog();
+						errorLog.saveLog();
+					}
+
+
+					//maintain server here
+					saveAllFiles();
+					printRecord("--> Maintenance Thread saved all information");
+				} catch (InterruptedException e) {
+					printException(e);
 				}
-				
-				
-				//maintain server here
-				saveAllFiles();
-				printRecord("--> Maintenance Thread saved all information");
-			} catch (InterruptedException e) {
-				printException(e);
 			}
 		}
 
@@ -673,15 +676,15 @@ public class Server {
 
 
 
-	
+
 	/*
 	public static void main(String[] args){
 		//Server.messageSlack("New \nLine", null);
-		
+
 		String derp = "f%2ff";
-		
+
 		String convert = derp.replaceAll("%2f", "/");
-		
+
 		System.out.println(convert);
 
 		Calendar d = Calendar.getInstance();
@@ -691,7 +694,7 @@ public class Server {
 				(d.get(Calendar.MINUTE) >= 5) && (d.get(Calendar.MINUTE) <= 10)){
 		System.out.println(d.get(Calendar.HOUR_OF_DAY));
 		}
-		
+
 	}
 	 */
 }
