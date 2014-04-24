@@ -378,52 +378,7 @@ public class Server {
 					}
 					
 
-					if (command.equals(TIP_CMD)){
-						
-					}
-
-
-
-					}
-					else if (command.equals(CHECK_CMD)){
-						
-					}
-					else if (command.equals(REGISTER_CMD)){
-						//register command sent, update id of new user.
-
-						if (UserMapping.registerPair(userName, userID)){
-							UserMapping.saveAll();
-
-							log.writeLine("Added " + userName + " as new ID: " + userID);
-
-							//create new user in database
-							UserDB.registerUser(userID);
-							UserDB.saveAll();
-
-
-							messageSlack("Welcome "+ userName + "! You have " + UserDB.getUser(userID).getPts() 
-									+ Config.getCurrencyName() + ". Earn more by getting tips from friends.", channelName);
-						}
-						else{
-							String oldName = UserMapping.getName(userID);
-							if (UserMapping.updateName(oldName, userName)){
-								//successful name update.
-
-								UserMapping.saveAll();
-
-								log.writeLine("Updated " + oldName + " -> " + userName);
-
-								messageSlack("Gotcha! I'll remember you as " + userName + " from now on.", channelName);
-							}
-						}
-					}
-					else if (command.equals(SLAP_CMD)){
-						
-					}
-					else{
-						//invalid command
-						
-					}
+					
 				}
 			} catch (IOException e) {
 				printException(e);
