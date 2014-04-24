@@ -17,6 +17,8 @@ public class RequestStruct {
 	public static final String USER_NAME_TAG = "user_name=";
 	public static final String USER_ID_TAG = "user_id=";
 
+	
+	private String payload;
 
 	private String token; 
 	private String channelName; 
@@ -30,6 +32,7 @@ public class RequestStruct {
 	
 	private RequestStruct(String payload) throws IllegalArgumentException{
 
+		this.payload = payload;
 	
 			try {
 				token = getTagArg(payload, PAYLOAD_START);
@@ -124,6 +127,10 @@ public class RequestStruct {
 	
 	//========================================================================
 	//Getters and Setters
+	
+	public String getPayload(){
+		return payload;
+	}
 	
 	public String getToken() {
 		return token;

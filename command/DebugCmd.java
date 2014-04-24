@@ -1,14 +1,9 @@
 package command;
 
 
-/**
- * Template class. Should be used as a template only.
- * @author Kevin
- *
- */
-public final class Template extends Command {
 
-	private static final String COMMAND = "";
+public class DebugCmd extends Command {
+	private static final String COMMAND = "/debug";
 	
 	
 	private String returnMessage;
@@ -17,7 +12,7 @@ public final class Template extends Command {
 	private String errorMessage;
 	
 	
-	public Template() {
+	public DebugCmd() {
 		super(COMMAND);
 		
 	}
@@ -26,6 +21,9 @@ public final class Template extends Command {
 	@Override
 	public CmdResult doRequest(RequestStruct req) {
 		returnChannel = req.getChannelName();
+		
+		//return the payload.
+		returnMessage = req.getPayload();
 		
 		return CmdResult.SUCCESS_NO_REPORT;
 	}
@@ -53,5 +51,4 @@ public final class Template extends Command {
 	public String getErrorMessage() {
 		return errorMessage;
 	}
-
 }
