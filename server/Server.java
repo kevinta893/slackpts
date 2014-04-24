@@ -137,7 +137,7 @@ public class Server {
 
 
 			//create the handling thread and run it.
-			acceptThread = new Thread(new SocketAccepter());
+			acceptThread = new Thread(new SocketAccepter(listenSock));
 			acceptThread.start();
 
 			//startTime = new Date(System.currentTimeMillis());							//server actually starts running here.
@@ -428,13 +428,18 @@ public class Server {
 	 */
 	private final class SocketAccepter implements Runnable{
 
+		private ServerSocket serverSock;
+		
+		public SocketAccepter(ServerSocket serv){
+			this.serverSock = serv;
+		}
 
 		@Override
 		public void run() {
 
 			while( running == true ){
 				try {
-					Socket client = listenSock.accept();
+					Socket client = serverSock.accept();
 
 					//got a connection
 					println("Recieved connection from: " + client.getInetAddress().toString() + ":" + client.getPort());

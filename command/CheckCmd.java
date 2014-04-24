@@ -40,13 +40,13 @@ public class CheckCmd extends Command {
 					User check = UserDB.getUser(targetID);
 					String humanName = UserMapping.getName(targetID);
 					returnMessage = humanName + " has " + check.getPts() + Config.getCurrencyName() + ".";
-					return CmdResult.SUCCESS_SILENT;
+					return CmdResult.SUCCESS_NO_REPORT;
 				}
 			}
 			else{
 				//no such user exists, report back
 				returnMessage = "No such user named " + req.getUserName() + " exists. Have they registered yet?";
-				return CmdResult.SUCCESS_SILENT;
+				return CmdResult.SUCCESS_NO_REPORT;
 			}
 
 		}
@@ -62,13 +62,13 @@ public class CheckCmd extends Command {
 					User check = UserDB.getUser(targetID);
 					String humanName = UserMapping.getName(targetID);
 					returnMessage = humanName + " has " + check.getPts() + Config.getCurrencyName() + ".";
-					return CmdResult.SUCCESS;
+					return CmdResult.SUCCESS_NO_REPORT;
 				}
 			}
 			else{
 				//no such user exists, report back
 				returnMessage = "I cannot find your record " + req.getUserName() + ". Have you registered yet?";
-				return CmdResult.SUCCESS;
+				return CmdResult.SUCCESS_NO_REPORT;
 			}
 		}
 
