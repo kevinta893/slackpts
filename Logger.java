@@ -28,7 +28,17 @@ public class Logger {
 
 
 	public Logger(String foldername, String filename){
-
+		File folder = new File(foldername);
+		
+		//make directory if possible
+		if (folder.exists() == false){
+			if (folder.mkdir() == false){
+				System.out.println("Error! Could not create the folder " + foldername + " to store the log " + filename);
+			}
+		}
+		
+		
+		
 		this.filename = filename;
 
 		//create the log file, append to existing
