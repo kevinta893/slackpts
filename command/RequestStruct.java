@@ -107,18 +107,29 @@ public class RequestStruct {
 	 * If there are no arguments, an empty array is returned.
 	 * If the string does not contain the "
 	 * @param payload
-	 * @return
+	 * @return An array of string of all args, an empty array if zero args, null if
+	 * the payload given was invalid.
 	 */
 	private static String[] getTextArgs(String payload){
 		int index = payload.indexOf(TEXT_TAG);
 
+		
 		if (index >=0){
 			String raw = payload.substring(index + TEXT_TAG.length());
 
-			return raw.split("\\+");
+			if (raw.indexOf("+") >=0){
+				return raw.split("\\+");
+			}
+			else if (raw.length() >= 1){
+				String[] ret = new String[1];
+				ret[0] = raw;
+				return ret;
+			}
+			//no other space delimiters. zero args.
+			return (new String[0]);
 		}
 
-		return (new String[0]);
+		return null;
 	}
 	
 	

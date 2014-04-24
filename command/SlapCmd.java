@@ -32,7 +32,7 @@ private static final String COMMAND = "/slap";
 		
 		// assign the victim
 		String victim;
-		if((args.length == 1) && (args[0].equals("") == false)){
+		if(args.length == 1){
 			victim = args[0];
 		}
 		else{
@@ -45,23 +45,23 @@ private static final String COMMAND = "/slap";
 		
 		
 		
-		double[] probs = {0.7, 0.25, 0.04, 0.01};
+		double[] probs = {0.8, 0.15, 0.04, 0.01};
 		
 		int index = Rand.randArray(probs);
 		
 		
 		//randomly select message to send back.
 		if (index == 0){
-			returnMessage = perp + " slapped " + victim + " with a trout!";
+			returnMessage = perp + " slaps " + victim + " around a bit with a large trout";
 		}
 		else if (index == 1){
-			returnMessage = perp + " slapped " + victim + " with a fat trout";
+			returnMessage = perp + " slaps " + victim + " around a bit with a large fat trout";
 		}
 		else if (index == 2){
-			returnMessage = perp + " slapped " + victim + " with a rainbow trout, fabulous!";
+			returnMessage = perp + " slaps " + victim + " around a bit with a rainbow trout! Fabulous!";
 		}
 		else if (index == 3){
-			returnMessage = Config.getBotName() + " slapped " + victim + " with a " + perp + "! Critical hit!";
+			returnMessage = Config.getBotName() + " slaps " + victim + " with a " + perp + "! Critical hit! 5x Combo!";
 		}
 		
 		

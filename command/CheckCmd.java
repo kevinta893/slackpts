@@ -28,7 +28,7 @@ public class CheckCmd extends Command {
 		
 		//check command sent, return current points.
 
-		if ((args.length == 1) && (args[0].equals("") == false)){
+		if (args.length == 1){
 			//arg specified, check that user
 
 			//get the id of the user
@@ -45,12 +45,12 @@ public class CheckCmd extends Command {
 			}
 			else{
 				//no such user exists, report back
-				returnMessage = "No such user named " + req.getUserName() + " exists. Have they registered yet?";
+				returnMessage = "No such user named " + args[0] + " exists. Have they registered yet?";
 				return CmdResult.SUCCESS_NO_REPORT;
 			}
 
 		}
-		else if ((args.length == 1) && (args[0].equals("") == true)){
+		else if (args.length == 0){
 			//check on self
 			
 			//get the id of the user

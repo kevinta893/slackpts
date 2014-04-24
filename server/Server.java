@@ -597,16 +597,19 @@ public class Server {
 
 
 
-	/*
+	
 	public static void main(String[] args){
 		//Server.messageSlack("New \nLine", null);
 
-		String derp = "f%2ff";
+		RequestStruct derpreq = RequestStruct.createInstance("token=IwpHiALszaR2LZLLBPatrPN3&team_id=T024GLC9M&channel_id=C0291NEV5&channel_name=bot-forge&user_id=U024HATQ5&user_name=agamemnon&command=%2Fcheck&text=hiimkevin0uo");
+		
+		
+		String derp = "i";
 
-		String convert = derp.replaceAll("%2f", "/");
+		String[] convert = derp.split("\\+");
 
-		System.out.println(convert);
-
+		System.out.println(convert.length);
+		System.out.println(new String[0].length);
 		Calendar d = Calendar.getInstance();
 		d.add(Calendar.HOUR_OF_DAY, 6);
 		d.add(Calendar.MINUTE, -15);
@@ -615,6 +618,7 @@ public class Server {
 		System.out.println(d.get(Calendar.HOUR_OF_DAY));
 		}
 
+		
 	}
-	 */
+	 
 }
