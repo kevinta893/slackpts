@@ -1,4 +1,7 @@
 package server;
+
+import command.CheckCmd;
+import command.RegisterCmd;
 /*
 The MIT License (MIT)
 
@@ -22,6 +25,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+import command.SlapCmd;
+import command.TipCmd;
 
 
 /**
@@ -34,6 +39,17 @@ public class Driver {
 	private static final int DEFAULT_PORT = 48567;
 	
 	public static void main(String[] args){
-		new Server(DEFAULT_PORT).startServer();
+		
+		
+		Server instance = new Server(DEFAULT_PORT);
+		
+		//register all commands
+		instance.registerCommand(new SlapCmd());
+		instance.registerCommand(new CheckCmd());
+		instance.registerCommand(new TipCmd());
+		instance.registerCommand(new RegisterCmd());
+		
+		//start server
+		instance.startServer();
 	}
 }

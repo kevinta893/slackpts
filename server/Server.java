@@ -403,7 +403,13 @@ public class Server {
 
 	
 
-	
+	/**
+	 * Adds a command to this server's request handler.
+	 * @param cmd
+	 */
+	public void registerCommand(Command cmd){
+		commands.add(cmd);
+	}
 
 
 	//===========================================================================================================
