@@ -1,3 +1,4 @@
+package server;
 /*
 The MIT License (MIT)
 
@@ -29,7 +30,10 @@ SOFTWARE.
  *
  */
 public class Driver {
+	
+	private static final int DEFAULT_PORT = 48567;
+	
 	public static void main(String[] args){
-		Server.getInstance().startServer();
+		new Server(DEFAULT_PORT).startServer();
 	}
 }

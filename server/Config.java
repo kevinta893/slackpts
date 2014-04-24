@@ -1,3 +1,4 @@
+package server;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -20,9 +21,6 @@ import java.util.Map.Entry;
  *
  */
 public class Config{
-
-	//private static final int MIN_PORT = 1000;
-	//private static final int MAX_PORT = 65535;
 
 
 

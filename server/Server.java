@@ -1,3 +1,4 @@
+package server;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.Scanner;
 
 import org.apache.http.HttpResponse;
@@ -18,6 +20,10 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+
+import command.Command;
+import command.Command.CmdResult;
+import command.RequestStruct;
 
 
 /**
@@ -27,34 +33,29 @@ import org.apache.http.impl.client.HttpClients;
  */
 public class Server {
 
+	public static final int MIN_PORT = 1000;
+	public static final int MAX_PORT = 65535;
+	
+	
 	public static final int INCREMENT = 1;
 
 
-	//payload tags in Slack POST
-	public static final String PAYLOAD_START = "token=";
-	public static final String CMD_TAG = "command=";
-	public static final String TEXT_TAG = "text=";
-	public static final String CHANNEL_NAME_TAG = "channel_name=";
-	public static final String CHANNEL_ID_TAG = "channel_id=";
-	public static final String USER_NAME_TAG = "user_name=";
-	public static final String USER_ID_TAG = "user_id=";
-
+	private LinkedList<Command> commands = new LinkedList<Command>();
 
 	//custom commands.
 	public static final String TIP_CMD = "/tip";
 	public static final String CHECK_CMD = "/check";
 	public static final String REGISTER_CMD = "/register";
+	public static final String SLAP_CMD = "/slap";
+	
 
 
-
-	private static ServerSocket listenSock;
-
-
+	private ServerSocket listenSock;
 
 
 	//loggers
-	private static volatile Logger log;
-	private static volatile Logger errorLog;
+	private volatile Logger log;
+	private volatile Logger errorLog;
 
 	private static final String LOG_FOLDER = "logs";
 	private static final String ERROR_LOG_FOLDER = LOG_FOLDER;
@@ -63,29 +64,43 @@ public class Server {
 
 
 	//threads
-	private static Thread acceptThread;
-	private static Thread maintanenceThread;					//see Maintenence Thread for maintentence interval
+	private Thread acceptThread;
+	private Thread maintanenceThread;					//see Maintenence Thread for maintentence interval
 
 
 
 
-	private static boolean running = true;						//server running or not
-	private static boolean silent = false;						//silent mode prevents server from posting to slack
+	private boolean running = true;						//server running or not
+	private boolean silent = false;						//silent mode prevents server from posting to slack
 
 
 	//private static Date startDate = new Date(System.currentTimeMillis());
 
-	private static Server instance;
-
-	public static Server getInstance(){
-		if (instance == null){
-			instance = new Server();
+	public Server(int port){
+		//check port arg
+		if ((port< MIN_PORT) && (port > MAX_PORT)){
+			throw new IllegalArgumentException("Invalid port given. Cannot create server with port " + port);
 		}
-		return instance;
+		
+		//create the listen socket
+		try {
+			listenSock = new ServerSocket(Config.getPort());
+
+		} catch (BindException e){
+			System.err.println(e.getMessage());
+			System.err.println("Cannot setup server! Quitting...");
+			System.exit(-1);
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			System.err.println("Cannot setup server! Quitting...");
+			System.exit(-1);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Cannot setup server! Quitting...");
+			System.exit(-1);
+		}
+		
 	}
-
-
-	private Server(){}
 
 
 	/**
@@ -120,24 +135,6 @@ public class Server {
 
 
 
-			//create the listen socket
-			try {
-				listenSock = new ServerSocket(Config.getPort());
-
-			} catch (BindException e){
-				System.err.println(e.getMessage());
-				System.err.println("Cannot setup server! Quitting...");
-				System.exit(-1);
-			} catch (UnknownHostException e) {
-				e.printStackTrace();
-				System.err.println("Cannot setup server! Quitting...");
-				System.exit(-1);
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.err.println("Cannot setup server! Quitting...");
-				System.exit(-1);
-			}
-
 
 			//create the handling thread and run it.
 			acceptThread = new Thread(new SocketAccepter());
@@ -147,13 +144,19 @@ public class Server {
 
 			maintanenceThread = new Thread(new MaintenanceThread());
 			maintanenceThread.start();
+			
+			
+			//move this thread into command line service
+			println("Server now running. Enter commands to maintain.");
+			commandLine();
+		}
+		else{
+			println("Server already running.");
 		}
 
+		
 
-		//move this thread into command line service
-
-		println("Server now running. Enter commands to maintain.");
-		commandLine();
+		
 	}
 
 
@@ -161,7 +164,7 @@ public class Server {
 	 * Server commandline that runs commands to manage the
 	 * server.
 	 */
-	private static void commandLine(){
+	private void commandLine(){
 
 		Scanner in = new Scanner(System.in);
 
@@ -237,7 +240,7 @@ public class Server {
 	 * @param message
 	 * @param channel
 	 */
-	private static void messageSlack(String textPost, String channel){
+	private void messageSlack(String textPost, String channel){
 		//System.out.println(textPost);
 
 		//convert all new lines into proper characters
@@ -325,101 +328,58 @@ public class Server {
 					//convert payload into proper text
 
 					//with complete request, find the command sent
-					String channelName = getTagArg(payload, CHANNEL_NAME_TAG);
-					//String channelID = getTagArg(payload, CHANNEL_ID_TAG);
-					String userID = getTagArg(payload, USER_ID_TAG);
-					String userName = getTagArg(payload, USER_NAME_TAG);
-					String command = getTagArg(payload, CMD_TAG).replaceAll("%2F", "/");			//replace "%2f" with forward slash
-					String[] args = getTextArgs(payload);								//arguements of the command
+					RequestStruct req = RequestStruct.createInstance(payload);
 
 
 					//print command out
-					String fullCommand = command;
+					String fullCommand = req.getCommand();
+					String[] args = req.getArgs();
 					for (int i =0; i < args.length; i++){
 						fullCommand = fullCommand + " " + args[i];
 					}
-					printRecord("<SLACK_CMD> " + userName + " issued command: \t"+fullCommand );
+					printRecord("<SLACK_CMD> " + req.getUserName() + " issued command: \t" + fullCommand);
 
-
+					for (Command com : commands){
+						
+						//go through each command and see if they apply
+						if (com.isCommand(req.getCommand())){
+							CmdResult cmdResult = com.doRequest(req);
+							
+							if (cmdResult == CmdResult.SUCCESS){
+								//request process is successful. report back
+								messageSlack(com.getReturnMessage(), com.getReturnChannel());
+								printRecord(com.getLogMessage());
+							}
+							else if (cmdResult == CmdResult.FAILED){
+								//request failed, requires error to be posted
+								messageSlack(com.getReturnMessage(), com.getReturnChannel());
+								printError(com.getErrorMessage());
+							}
+							else if (cmdResult == CmdResult.SUCCESS_SILENT){
+								//success, do not report back to slack
+								printRecord(com.getErrorMessage());
+							}
+							else if (cmdResult == CmdResult.FAILED_SILENT){
+								//failed, do not report back to slack
+								printError(com.getErrorMessage());
+							}
+							else if (cmdResult == CmdResult.INVALID){ 
+								//do nothing
+							}
+								
+						}
+					}
+					
 
 					if (command.equals(TIP_CMD)){
-						//increment command sent, increment points
-
-
-						//increment only if there is a user that exists.
-						if (args.length == 1){
-
-							String targetID = UserMapping.getID(args[0]);
-
-							if (targetID != null){
-								if (UserDB.hasUser(targetID)){
-
-
-									if (targetID.equals(userID) == false){
-										//not self, do tipping
-
-										UserDB.increment(targetID, INCREMENT);
-										String confirmMessage = args[0] + " gained " + INCREMENT + Config.getCurrencyName();
-										log.writeLine(confirmMessage);
-										messageSlack(confirmMessage, channelName);
-									}
-									else{
-										//error, cannot tip self.
-										messageSlack("You cannot tip yourself " + userName + "!", channelName);
-									}
-								}
-							}
-							else{
-								//no mapping found, return error
-								messageSlack("I do not recognize who " + args[0] + " is! Did that user get an account with the bank of Slack? Get that user to enter the command /register to sign up. If you already have an account, but changed your name recently please enter the command /register ASAP.", channelName);
-							}
+						
 						}
 
 
 
 					}
 					else if (command.equals(CHECK_CMD)){
-						//check command sent, return current points.
-
-						if ((args.length == 1) && (args[0].equals("") == false)){
-
-
-							//get the id of the user
-							String targetID = UserMapping.getID(args[0]);
-
-							if(targetID != null){
-								if (UserDB.hasUser(targetID)){
-									//user exists, return their count.
-									User check = UserDB.getUser(targetID);
-									String humanName = UserMapping.getName(targetID);
-									messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
-								}
-							}
-							else{
-								//no such user exists, report back
-								messageSlack("No such user named " + userName + " exists. Have they registered yet?", channelName);
-							}
-
-						}
-						else if ((args.length == 1) && (args[0].equals("") == true)){
-
-							//get the id of the user
-							String targetID = UserMapping.getID(userName);
-
-							if(targetID != null){
-								if (UserDB.hasUser(targetID)){
-									//user exists, return their count.
-									User check = UserDB.getUser(targetID);
-									String humanName = UserMapping.getName(targetID);
-									messageSlack(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", channelName);
-								}
-							}
-							else{
-								//no such user exists, report back
-								messageSlack("I cannot find your record " + userName + ". Have you registered yet?", channelName);
-							}
-						}
-
+						
 					}
 					else if (command.equals(REGISTER_CMD)){
 						//register command sent, update id of new user.
@@ -450,6 +410,9 @@ public class Server {
 							}
 						}
 					}
+					else if (command.equals(SLAP_CMD)){
+						
+					}
 					else{
 						//invalid command
 						messageSlack("Sorry I don't understand that command. :frown:", channelName);
@@ -476,46 +439,9 @@ public class Server {
 
 	}
 
-	/**
-	 * Gets the command argument of the Slack slash command of the
-	 * specified tag in the request.
-	 * Returned string is pre-trimmed.
-	 * @param postRequest The request to parse
-	 * @param tag The tag to extract the value of
-	 * @return Empty string if tag is not found, Value of the tag otherwise.
-	 */
-	private static String getTagArg(String payload, String tag){
+	
 
-		int index = payload.indexOf(tag);
-
-		if (index >= 0){
-			String arg = payload.substring(index + tag.length(),payload.indexOf("&", index));
-			return arg.trim();
-		}
-
-		return "";
-	}
-
-	/**
-	 * Gets all the arguments seperated by spaces (the '+' symbol).
-	 * Returns a String array of each argument in the order they are found in.
-	 * 
-	 * If there are no arguments, an empty array is returned.
-	 * If the string does not contain the "
-	 * @param payload
-	 * @return
-	 */
-	private static String[] getTextArgs(String payload){
-		int index = payload.indexOf(TEXT_TAG);
-
-		if (index >=0){
-			String raw = payload.substring(index + TEXT_TAG.length());
-
-			return raw.split("\\+");
-		}
-
-		return (new String[0]);
-	}
+	
 
 
 	//===========================================================================================================
@@ -620,7 +546,7 @@ public class Server {
 	/**
 	 * Saves all critical files.
 	 */
-	private static void saveAllFiles(){
+	private void saveAllFiles(){
 		log.saveLog();
 		errorLog.saveLog();
 		UserDB.saveAll();
@@ -637,6 +563,8 @@ public class Server {
 	private static String timeStamp(){
 		return "[" + (consoleDate.format(new Date(System.currentTimeMillis()))) + "]: ";
 	}
+	
+	
 
 	/**
 	 * Prints out an exception when it occurs. Only the stack
@@ -645,7 +573,7 @@ public class Server {
 	 * 
 	 * @param e
 	 */
-	public static void printException(Exception e){
+	public void printException(Exception e){
 		String message = timeStamp() + "Exception occurred. " + UnknownHostException.class.getName() + ": " + e.getMessage();
 		printRecord(message + " --Please see error log for stack trace--");
 
@@ -660,9 +588,23 @@ public class Server {
 	}
 
 	/**
+	 * Prints an error to both the error log and the
+	 * err print stream.
+	 * @param message
+	 */
+	public void printError(String message){
+		String stamped = timeStamp() + " " + message;
+		errorLog.writeLine(stamped);
+		System.err.println(stamped);
+		
+		log.writeLine(timeStamp() + "Error has occured. See error log.");
+	}
+	
+	
+	/**
 	 * Prints a line in the server and in the log. Time stamped
 	 */
-	public static void printRecord(String message){
+	public void printRecord(String message){
 		System.out.println(timeStamp() + message);
 		log.writeLine(message);
 	}
