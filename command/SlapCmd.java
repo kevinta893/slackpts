@@ -6,7 +6,7 @@ import server.Config;
 
 public class SlapCmd extends Command{
 
-private static final String COMMAND = "";
+private static final String COMMAND = "/slap";
 	
 	
 	private String returnMessage;
