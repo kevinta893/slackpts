@@ -45,7 +45,7 @@ private static final String COMMAND = "/slap";
 		
 		
 		
-		double[] probs = {0.7, 0.15, 0.04, 0.01};
+		double[] probs = {0.7, 0.25, 0.04, 0.01};
 		
 		int index = Rand.randArray(probs);
 		
