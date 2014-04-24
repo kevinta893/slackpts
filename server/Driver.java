@@ -1,6 +1,7 @@
 package server;
 
 import command.CheckCmd;
+import command.DebugCmd;
 import command.RegisterCmd;
 /*
 The MIT License (MIT)
