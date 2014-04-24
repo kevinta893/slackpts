@@ -171,4 +171,14 @@ public class RequestStruct {
 		return args;
 	}
 	
+	
+	/**
+	 * Returns the payload as represented by this struct
+	 * Formatted payload appears with newline characters
+	 */
+	public String toString(){
+		String ret = payload.replaceAll("&", "\n");
+		ret = ret.replaceAll("%2F", "/");
+		return ret;
+	}
 }

@@ -23,7 +23,7 @@ public class DebugCmd extends Command {
 		returnChannel = req.getChannelName();
 		
 		//return the payload.
-		returnMessage = req.getPayload();
+		returnMessage = req.toString();
 		
 		return CmdResult.SUCCESS_NO_REPORT;
 	}

@@ -597,9 +597,9 @@ public class Server {
 
 
 
-	
+	/*
 	public static void main(String[] args){
-		//Server.messageSlack("New \nLine", null);
+		//Server.messageSlack("New \nLine", "D024J9MFY");
 
 		RequestStruct derpreq = RequestStruct.createInstance("token=IwpHiALszaR2LZLLBPatrPN3&team_id=T024GLC9M&channel_id=C0291NEV5&channel_name=bot-forge&user_id=U024HATQ5&user_name=agamemnon&command=%2Fcheck&text=hiimkevin0uo");
 		
@@ -620,5 +620,5 @@ public class Server {
 
 		
 	}
-	 
+	 */
 }
