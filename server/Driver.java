@@ -48,6 +48,7 @@ public class Driver {
 		instance.registerCommand(new CheckCmd());
 		instance.registerCommand(new TipCmd());
 		instance.registerCommand(new RegisterCmd());
+		instance.registerCommand(new SlapCmd());
 		
 		//start server
 		instance.startServer();
