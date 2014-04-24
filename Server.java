@@ -55,6 +55,9 @@ public class Server {
 	//loggers
 	private static volatile Logger log;
 	private static volatile Logger errorLog;
+	
+	private static final String LOG_FOLDER = "logs";
+	private static final String ERROR_LOG_FOLDER = LOG_FOLDER;
 	private static final String LOG_FILENAME = "log";
 	private static final String ERROR_LOG_FILENAME = "errorLog";
 	
@@ -107,8 +110,8 @@ public class Server {
 
 			//create the system log
 			println("Creating system logs...");
-			log = new Logger(LOG_FILENAME);
-			errorLog = new Logger(ERROR_LOG_FILENAME);
+			log = new Logger(LOG_FOLDER, LOG_FILENAME);
+			errorLog = new Logger(ERROR_LOG_FOLDER, ERROR_LOG_FILENAME);
 			println("Log started in file: " + log.getFileName());
 
 
@@ -591,8 +594,8 @@ public class Server {
 					errorLog.saveLog();
 					
 					//swtich to new ones.
-					log = new Logger(LOG_FILENAME);
-					errorLog = new Logger(ERROR_LOG_FILENAME);
+					log = new Logger(LOG_FOLDER, LOG_FILENAME);
+					errorLog = new Logger(ERROR_LOG_FOLDER, ERROR_LOG_FILENAME);
 					
 					//save both logs
 					log.saveLog();
@@ -671,7 +674,7 @@ public class Server {
 
 
 	
-	
+	/*
 	public static void main(String[] args){
 		//Server.messageSlack("New \nLine", null);
 		
@@ -690,5 +693,5 @@ public class Server {
 		}
 		
 	}
-	 
+	 */
 }

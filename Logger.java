@@ -21,36 +21,40 @@ import java.text.SimpleDateFormat;
 public class Logger {
 
 	private String filename;
-	
+
 	private BufferedWriter writer;
-	
-	
-	
-	
-	public Logger(String filename){
+
+
+
+
+	public Logger(String foldername, String filename){
+
 		this.filename = filename;
-		
+
 		//create the log file, append to existing
 		this.filename = filename + " - " + dateStamp() + ".txt";
-		File logFile = new File(this.filename);
+		File logFile = new File(foldername + File.separator + this.filename);
 		
 		try {
+			logFile.createNewFile();
+			
 			boolean exists = logFile.exists();			//check if file already exists prior to creating
+
 			
-			writer = new BufferedWriter(new FileWriter(logFile, true));
-			
+
 			if(exists == true){
+				writer = new BufferedWriter(new FileWriter(logFile, true));
 				this.writeLine("Log already exists, continuing log file...");
 				writer.flush();
 			}
-			
+
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("Error! Cannot create the log file: " + filename);
 		}
 	}
 
-	
+
 	/**
 	 * Writes a line to the file. Each message is time stamped
 	 * and written on a single line.
@@ -67,7 +71,7 @@ public class Logger {
 			System.err.println("Error! Cannot write line to the log file: " + filename);
 		}
 	}
-	
+
 	public void saveLog(){
 		try {
 			writer.flush();
@@ -76,7 +80,7 @@ public class Logger {
 			System.err.println("Error! Cannot save the log file: " + filename);
 		}
 	}
-	
+
 	/**
 	 * Closes the logger, does not save.
 	 */
@@ -88,10 +92,10 @@ public class Logger {
 			e.printStackTrace();
 			System.err.println("Error! Cannot close the log file: " + filename);
 		}
-		
+
 	}
-	
-	
+
+
 	private static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private static SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
 	/**
@@ -102,7 +106,7 @@ public class Logger {
 	private static String timeStamp(){
 		return "[" + (formatter.format(new Date(System.currentTimeMillis()))) + "]: ";
 	}
-	
+
 	/**
 	 * Returns the current date.
 	 * @return
