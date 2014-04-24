@@ -32,7 +32,7 @@ private static final String COMMAND = "/slap";
 		
 		// assign the victim
 		String victim;
-		if(args.length == 1){
+		if((args.length == 1) && (args[0].equals("") == false)){
 			victim = args[0];
 		}
 		else{

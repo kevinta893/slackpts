@@ -29,7 +29,7 @@ public class CheckCmd extends Command {
 		//check command sent, return current points.
 
 		if ((args.length == 1) && (args[0].equals("") == false)){
-
+			//arg specified, check that user
 
 			//get the id of the user
 			String targetID = UserMapping.getID(args[0]);
@@ -51,7 +51,8 @@ public class CheckCmd extends Command {
 
 		}
 		else if ((args.length == 1) && (args[0].equals("") == true)){
-
+			//check on self
+			
 			//get the id of the user
 			String targetID = UserMapping.getID(req.getUserName());
 
