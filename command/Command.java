@@ -9,6 +9,7 @@ public abstract class Command {
 	public enum CmdResult{
 		SUCCESS,					//request successful, write command to log if needed and return verbose.
 		FAILED,						//request failed and should report error.
+		SUCCESS_NO_REPORT,			//request satisfied, no need to report.
 		SUCCESS_SILENT,				//request successful, but do not report back to slack
 		FAILED_SILENT,				//request failed but, but do not report back to slack
 		INVALID;					//request was an invalid command and should be ignored.

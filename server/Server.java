@@ -353,6 +353,11 @@ public class Server {
 								messageSlack(com.getReturnMessage(), com.getReturnChannel());
 								printRecord(com.getLogMessage());
 							}
+							else if (cmdResult == CmdResult.SUCCESS_NO_REPORT){
+								//request processed, no need to report its log
+								messageSlack(com.getReturnMessage(), com.getReturnChannel());
+								println("Request Successful.");
+							}
 							else if (cmdResult == CmdResult.FAILED){
 								//request failed, requires error to be posted
 								messageSlack(com.getReturnMessage(), com.getReturnChannel());
