@@ -1,10 +1,7 @@
 package server;
 
-import command.CheckCmd;
-import command.CoinCmd;
-import command.DebugCmd;
-import command.FortuneCmd;
-import command.RegisterCmd;
+import command.*;
+
 /*
 The MIT License (MIT)
 
@@ -28,8 +25,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-import command.SlapCmd;
-import command.TipCmd;
+
 
 
 /**
@@ -54,6 +50,8 @@ public class Driver {
 		instance.registerCommand(new DebugCmd());
 		instance.registerCommand(new FortuneCmd());
 		instance.registerCommand(new CoinCmd());
+		instance.registerCommand(new NumberCmd());
+		
 		//start server
 		instance.startServer();
 	}

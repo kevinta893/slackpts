@@ -1,10 +1,13 @@
 package command;
 
 
-public class CoinCmd extends Command{
+public class NumberCmd extends Command {
+	
+	private static final String COMMAND = "/number";
 
-	private static final String COMMAND = "/coin";
-
+	private static final int MIN = 1;				//inclusive
+	private static final int MAX = 10;				//inclusive
+	
 
 	private String returnMessage;
 	private String returnChannel;
@@ -12,7 +15,7 @@ public class CoinCmd extends Command{
 	private String errorMessage;
 
 
-	public CoinCmd() {
+	public NumberCmd() {
 		super(COMMAND);
 
 	}
@@ -22,9 +25,9 @@ public class CoinCmd extends Command{
 	public CmdResult doRequest(RequestStruct req) {
 		returnChannel = req.getChannelName();
 
-		String result = (Rand.randBoolean() == true) ? "heads" : "tails";
+		String result = Integer.toString(Rand.randInt(MIN, MAX));
 
-		returnMessage = "Flipping a coin...\nIt's *" + result + "*";
+		returnMessage = "Your number is: *" + result + "*";
 
 		return CmdResult.SUCCESS_NO_REPORT;
 	}
@@ -53,3 +56,4 @@ public class CoinCmd extends Command{
 		return errorMessage;
 	}
 }
+
