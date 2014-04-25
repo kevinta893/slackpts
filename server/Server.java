@@ -243,10 +243,14 @@ public class Server {
 	private void messageSlack(String textPost, String channel){
 		//System.out.println(textPost);
 
-		//convert all new lines into proper characters
-		textPost = textPost.replaceAll("\n", "`\\\\n`");
+		
 
 		if(silent == false){
+			
+			//convert all new lines into proper characters
+			textPost = textPost.replaceAll("\n", "`\\\\n`");
+			
+			
 			String message;
 			//construct the JSON message
 			if (channel != null){
@@ -282,6 +286,10 @@ public class Server {
 			} catch (IOException e) {
 				printException(e);
 			}
+		}
+		else{
+			//silent mode, should print out the reply that should have been
+			println(textPost);
 		}
 	}
 

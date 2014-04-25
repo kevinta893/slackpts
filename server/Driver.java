@@ -2,6 +2,7 @@ package server;
 
 import command.CheckCmd;
 import command.DebugCmd;
+import command.FortuneCmd;
 import command.RegisterCmd;
 /*
 The MIT License (MIT)
@@ -50,6 +51,8 @@ public class Driver {
 		instance.registerCommand(new TipCmd());
 		instance.registerCommand(new RegisterCmd());
 		instance.registerCommand(new DebugCmd());
+		instance.registerCommand(new FortuneCmd());
+		
 		//start server
 		instance.startServer();
 	}
