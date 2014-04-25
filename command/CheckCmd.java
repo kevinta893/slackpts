@@ -5,6 +5,12 @@ import server.User;
 import server.UserDB;
 import server.UserMapping;
 
+/**
+ * Command that checks how many points a user or self has
+ * in their "wallet".
+ * @author Kevin
+ *
+ */
 public class CheckCmd extends Command {
 	private static final String COMMAND = "/check";
 

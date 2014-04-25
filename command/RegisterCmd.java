@@ -4,6 +4,13 @@ import server.Config;
 import server.UserDB;
 import server.UserMapping;
 
+
+/**
+ * The command that registers a user's name
+ * to the particular ID. Updates user mappings database.
+ * @author Kevin
+ *
+ */
 public class RegisterCmd extends Command{
 
 	private static final String COMMAND = "/register";

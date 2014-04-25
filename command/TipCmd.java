@@ -6,7 +6,8 @@ import server.UserMapping;
 
 
 /**
- * Command that supports the tipping of other users
+ * Command that supports the tipping of other users.
+ * Updates user database of the new value.
  * @author Kevin
  *
  */

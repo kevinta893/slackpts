@@ -1,7 +1,12 @@
 package command;
 
 
-
+/**
+ * The debugging command that returns the payload
+ * given to the server.
+ * @author Kevin
+ *
+ */
 public class DebugCmd extends Command {
 	private static final String COMMAND = "/debug";
 	

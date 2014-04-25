@@ -3,7 +3,11 @@ package command;
 import server.Config;
 
 
-
+/**
+ * The command that sends a random fish slapping message.
+ * @author Kevin
+ *
+ */
 public class SlapCmd extends Command{
 
 private static final String COMMAND = "/slap";

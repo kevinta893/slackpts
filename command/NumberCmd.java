@@ -1,6 +1,11 @@
 package command;
 
 
+/**
+ * Command returns a random number between 1 and 10 inclusive.
+ * @author Kevin
+ *
+ */
 public class NumberCmd extends Command {
 	
 	private static final String COMMAND = "/number";

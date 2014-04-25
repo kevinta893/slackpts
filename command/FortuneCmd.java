@@ -9,6 +9,13 @@ import java.util.Calendar;
 import java.util.Random;
 
 
+/**
+ * The command that returns a fortune for a paritular
+ * user ID once per day. The fortune list is given by the file
+ * fortunes.txt
+ * @author Kevin
+ *
+ */
 public class FortuneCmd extends Command{
 
 	private static final String COMMAND = "/fortune";
@@ -88,7 +95,7 @@ public class FortuneCmd extends Command{
 
 	private class FortuneList{
 
-		private static final String FORTUNE_FILE_NAME = "fortunes";
+		private static final String FORTUNE_FILE_NAME = "fortunes.txt";
 
 		private ArrayList<String> masterList = new ArrayList<String>();
 		

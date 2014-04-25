@@ -1,6 +1,13 @@
 package command;
 
 
+
+/**
+ * The command that flips a coin and says either
+ * heads or tails. 50-50 chance.
+ * @author Kevin
+ *
+ */
 public class CoinCmd extends Command{
 
 	private static final String COMMAND = "/coin";
