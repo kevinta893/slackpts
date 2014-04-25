@@ -22,8 +22,10 @@ private static final String COMMAND = "/coin";
 	public CmdResult doRequest(RequestStruct req) {
 		returnChannel = req.getChannelName();
 		
-		returnMessage = (Rand.randBoolean() == true) ? "heads" : "tails";
+		String result = (Rand.randBoolean() == true) ? "heads" : "tails";
 		
+		returnMessage = "Flipping a coin...\nIt's *" + result + "*";
+				
 		return CmdResult.SUCCESS_NO_REPORT;
 	}
 
