@@ -8,10 +8,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Random;
 
-import server.User;
-import server.UserDB;
-import server.UserMapping;
-
 
 public class FortuneCmd extends Command{
 
