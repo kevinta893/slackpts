@@ -42,14 +42,6 @@ public class Server {
 
 	private LinkedList<Command> commands = new LinkedList<Command>();
 
-	//custom commands.
-	public static final String TIP_CMD = "/tip";
-	public static final String CHECK_CMD = "/check";
-	public static final String REGISTER_CMD = "/register";
-	public static final String SLAP_CMD = "/slap";
-	
-
-
 	private ServerSocket listenSock;
 
 

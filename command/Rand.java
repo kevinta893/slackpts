@@ -6,6 +6,12 @@ public class Rand {
 
 	private static Random rand = new MersenneTwister();
 	
+	
+	public static boolean randBoolean(){
+		return rand.nextBoolean();
+	}
+	
+	
 	/**
 	 * Gets a random integer from 0 inclusive, max exclusive.
 	 * @param max
