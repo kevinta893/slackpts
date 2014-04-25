@@ -56,10 +56,10 @@ private static final String COMMAND = "/slap";
 		
 		//randomly select message to send back.
 		if (index == 0){
-			returnMessage = perp + " slaps " + victim + " around a bit with a large trout";
+			returnMessage = perp + " slaps " + victim + " around a bit with a large trout.";
 		}
 		else if (index == 1){
-			returnMessage = perp + " slaps " + victim + " around a bit with a large fat trout";
+			returnMessage = perp + " slaps " + victim + " around a bit with a large fat trout.";
 		}
 		else if (index == 2){
 			returnMessage = perp + " slaps " + victim + " around a bit with a rainbow trout! Fabulous!";
