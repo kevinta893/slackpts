@@ -14,6 +14,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.Scanner;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -343,14 +346,21 @@ public class Server {
 	 */
 	private final class RequestHandler implements Runnable{
 
-		Socket client;
-
-		public RequestHandler(Socket client){
+		private Socket client;
+		private RequestCallback caller;
+		
+		public RequestHandler(Socket client, RequestCallback caller){
 			this.client = client;
+			this.caller = caller;
 		}
 
 		@Override
 		public void run() {
+			doWork();
+			caller.done();			
+		}
+		
+		private void doWork(){
 			try {
 				BufferedReader buff = new BufferedReader(new InputStreamReader(client.getInputStream(), "UTF-8"));
 
@@ -447,7 +457,6 @@ public class Server {
 				printException(e);
 			}
 
-
 		}
 
 	}
@@ -472,10 +481,16 @@ public class Server {
 	 * @author Kevin
 	 *
 	 */
-	private final class SocketAccepter implements Runnable{
+	private final class SocketAccepter implements Runnable, RequestCallback{
 
 		private ServerSocket serverSock;
 
+		private volatile int serviceCount = 0;
+		
+		private static final int MAX_REQUEST_COUNT = 7;
+		private static final int BAN_SECONDS = 30;						//negative number for infinite ban till server restart.
+		
+		
 		public SocketAccepter(ServerSocket serv){
 			this.serverSock = serv;
 		}
@@ -484,18 +499,40 @@ public class Server {
 		public void run() {
 
 			while( running == true ){
+				
+				
+				
+				
 				try {
 					Socket client = serverSock.accept();
 
+					//should not request more than max
+					serviceCount++;
+					
+					
+					if (serviceCount >= MAX_REQUEST_COUNT){
+						printRecord("Warning! Max request count reached. Spammer alert! Server refusing requests for " + BAN_SECONDS + " seconds.");
+						Thread.sleep(BAN_SECONDS*1000);
+					}
+					
+					
+					
 					//got a connection
-					println("Recieved connection from: " + client.getInetAddress().toString() + ":" + client.getPort());
+					println("Recieved connection from: " + client.getInetAddress().getHostAddress() + ":" + client.getPort());
 
 					//handle request in new thread
-					Thread clientHandler = new Thread(new RequestHandler(client));
+					Thread clientHandler = new Thread(new RequestHandler(client, this));
 					clientHandler.start();
+					
+					
+					
 				} catch (IOException e) {
 					printException(e);
+				} catch (InterruptedException e) {
+					printException(e);
 				}
+				
+				
 			}
 
 
@@ -507,7 +544,18 @@ public class Server {
 
 		}
 
+		@Override
+		public void done() {
+			serviceCount--;
+		}
+
+		
 	}
+	private interface RequestCallback{
+		void done();
+	}
+	
+	
 
 
 	private final class MaintenanceThread implements Runnable{
