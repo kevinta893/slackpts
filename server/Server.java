@@ -16,6 +16,7 @@ import java.util.LinkedList;
 import java.util.Scanner;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -227,8 +228,14 @@ public class Server {
 
 
 	private static final int RESEND_COUNT = 5;
+	
+	
+	
+	private static final int RETRY_MILLIS = 10 * 1000;
 	/**
 	 * Posts a message on slack on the specified channel
+	 * 
+	 * Fail safe mechanism to stop messages from bot apocalypse
 	 * @param message
 	 * @param channel
 	 */
@@ -255,6 +262,9 @@ public class Server {
 
 			//System.out.println(message);
 			
+			
+			long enlapsedSeconds = System.currentTimeMillis();
+			
 			//attempt to send the message
 			boolean sendSuccess = false;
 			int tryCount = 0;
@@ -263,23 +273,8 @@ public class Server {
 
 				try {
 
-					CloseableHttpClient slackServer = HttpClients.createDefault();
-
-					HttpPost slackMessage = new HttpPost(Config.getSlackWebHook());
-
-					slackMessage.setHeader("User-Agent", "Slack Points Server");
-					slackMessage.setHeader("content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-					slackMessage.setEntity(new StringEntity(message));
-
-					HttpResponse response  = slackServer.execute(slackMessage);
-
-
-					//print reply from slack server if any.
-					ByteArrayOutputStream baos = new ByteArrayOutputStream();
-					response.getEntity().writeTo(baos);
-					println("<Slack Reply>: " + (new String(baos.toByteArray())));
-
-					slackServer.close();
+					sendMessage(message);
+					
 					sendSuccess = true;
 				} catch (UnknownHostException e){
 					//unknown host. try again
@@ -289,7 +284,21 @@ public class Server {
 					printRecord("Error, could not send message to Slack, retrying... (attempt #" + tryCount + ")");
 					printException(e);
 				}
-
+				
+				//wait one second to retry
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
+				enlapsedSeconds = Math.abs(System.currentTimeMillis() - enlapsedSeconds);
+				//if out of time, fail and break loop
+				if (enlapsedSeconds > RETRY_MILLIS){
+					sendSuccess = true;
+					tryCount = Integer.MAX_VALUE;
+					break;
+				}
 			}
 			
 			
@@ -304,6 +313,25 @@ public class Server {
 		}
 	}
 
+	private void sendMessage(String message) throws UnknownHostException, IOException {
+		CloseableHttpClient slackServer = HttpClients.createDefault();
+
+		HttpPost slackMessage = new HttpPost(Config.getSlackWebHook());
+
+		slackMessage.setHeader("User-Agent", "Slack Points Server");
+		slackMessage.setHeader("content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+		slackMessage.setEntity(new StringEntity(message));
+
+		HttpResponse response  = slackServer.execute(slackMessage);
+
+
+		//print reply from slack server if any.
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		response.getEntity().writeTo(baos);
+		println("<Slack Reply>: " + (new String(baos.toByteArray())));
+
+		slackServer.close();
+	}
 
 	//====================================================================================================
 	//The request handler
