@@ -14,9 +14,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.Scanner;
-import java.util.TreeMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -233,7 +230,7 @@ public class Server {
 	
 	
 	
-	private static final int RETRY_MILLIS = 10 * 1000;
+	private static final int RETRY_WINDOW = 10;			//retry window of 10 seconds
 	/**
 	 * Posts a message on slack on the specified channel
 	 * 
@@ -296,9 +293,8 @@ public class Server {
 				
 				enlapsedSeconds = Math.abs(System.currentTimeMillis() - enlapsedSeconds);
 				//if out of time, fail and break loop
-				if (enlapsedSeconds > RETRY_MILLIS){
+				if (enlapsedSeconds > (RETRY_WINDOW * 1000)){
 					sendSuccess = true;
-					tryCount = Integer.MAX_VALUE;
 					break;
 				}
 			}
