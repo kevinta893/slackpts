@@ -35,8 +35,8 @@ public class Server {
 
 	public static final int MIN_PORT = 1000;
 	public static final int MAX_PORT = 65535;
-	
-	
+
+
 	public static final int INCREMENT = 1;
 
 
@@ -73,7 +73,7 @@ public class Server {
 		if ((port< MIN_PORT) && (port > MAX_PORT)){
 			throw new IllegalArgumentException("Invalid port given. Cannot create server with port " + port);
 		}
-		
+
 		//create the listen socket
 		try {
 			listenSock = new ServerSocket(Config.getPort());
@@ -91,7 +91,7 @@ public class Server {
 			System.err.println("Cannot setup server! Quitting...");
 			System.exit(-1);
 		}
-		
+
 	}
 
 
@@ -136,8 +136,8 @@ public class Server {
 
 			maintanenceThread = new Thread(new MaintenanceThread());
 			maintanenceThread.start();
-			
-			
+
+
 			//move this thread into command line service
 			println("Server now running. Enter commands to maintain.");
 			commandLine();
@@ -146,9 +146,9 @@ public class Server {
 			println("Server already running.");
 		}
 
-		
 
-		
+
+
 	}
 
 
@@ -226,7 +226,7 @@ public class Server {
 
 
 
-
+	private static final int RESEND_COUNT = 5;
 	/**
 	 * Posts a message on slack on the specified channel
 	 * @param message
@@ -235,14 +235,14 @@ public class Server {
 	private void messageSlack(String textPost, String channel){
 		//System.out.println(textPost);
 
-		
+
 
 		if(silent == false){
-			
+
 			//convert all new lines into proper characters
 			textPost = textPost.replaceAll("\n", "`\\\\n`");
-			
-			
+
+
 			String message;
 			//construct the JSON message
 			if (channel != null){
@@ -254,29 +254,48 @@ public class Server {
 
 
 			//System.out.println(message);
-			try {
+			
+			//attempt to send the message
+			boolean sendSuccess = false;
+			int tryCount = 0;
+			while ((tryCount < RESEND_COUNT) && (sendSuccess == false)){
+				tryCount++;
 
-				CloseableHttpClient slackServer = HttpClients.createDefault();
+				try {
 
-				HttpPost slackMessage = new HttpPost(Config.getSlackWebHook());
+					CloseableHttpClient slackServer = HttpClients.createDefault();
 
-				slackMessage.setHeader("User-Agent", "Slack Points Server");
-				slackMessage.setHeader("content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-				slackMessage.setEntity(new StringEntity(message));
+					HttpPost slackMessage = new HttpPost(Config.getSlackWebHook());
 
-				HttpResponse response  = slackServer.execute(slackMessage);
+					slackMessage.setHeader("User-Agent", "Slack Points Server");
+					slackMessage.setHeader("content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+					slackMessage.setEntity(new StringEntity(message));
+
+					HttpResponse response  = slackServer.execute(slackMessage);
 
 
-				//print reply from slack server if any.
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				response.getEntity().writeTo(baos);
-				println("<Slack Reply>: " + (new String(baos.toByteArray())));
+					//print reply from slack server if any.
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					response.getEntity().writeTo(baos);
+					println("<Slack Reply>: " + (new String(baos.toByteArray())));
 
-				slackServer.close();
-			} catch (UnknownHostException e){
-				printException(e);
-			} catch (IOException e) {
-				printException(e);
+					slackServer.close();
+					sendSuccess = true;
+				} catch (UnknownHostException e){
+					//unknown host. try again
+					printRecord("Error, UnknownHostException, could not send message to Slack, retrying... (attempt #" + tryCount + ")");
+					printException(e);
+				} catch (IOException e) {
+					printRecord("Error, could not send message to Slack, retrying... (attempt #" + tryCount + ")");
+					printException(e);
+				}
+
+			}
+			
+			
+			//if resending was a major failure report
+			if (tryCount == RESEND_COUNT){
+				printRecord("Error! Attempted to send message to Slack " + tryCount + " times and failed. See error log for exceptions.");
 			}
 		}
 		else{
@@ -339,15 +358,15 @@ public class Server {
 					}
 					printRecord("<SLACK_CMD> " + req.getUserName() + " issued command: \t" + fullCommand);
 
-					
+
 					boolean didSomething = false;
 					for (Command com : commands){
-						
+
 						//go through each command and see if they apply
 						if (com.isCommand(req.getCommand())){
 							didSomething = true;
 							CmdResult cmdResult = com.doRequest(req);
-							
+
 							if (cmdResult == CmdResult.SUCCESS){
 								//request process is successful. report back
 								messageSlack(com.getReturnMessage(), com.getReturnChannel());
@@ -374,16 +393,16 @@ public class Server {
 							else if (cmdResult == CmdResult.INVALID){ 
 								//do nothing
 							}
-								
+
 						}
 					}
-					
+
 					if (didSomething == false){
 						messageSlack("Sorry I don't understand that command. :frown:", req.getChannelName());
 					}
-					
 
-					
+
+
 				}
 			} catch (IOException e) {
 				printException(e);
@@ -406,7 +425,7 @@ public class Server {
 
 	}
 
-	
+
 
 	/**
 	 * Adds a command to this server's request handler.
@@ -429,7 +448,7 @@ public class Server {
 	private final class SocketAccepter implements Runnable{
 
 		private ServerSocket serverSock;
-		
+
 		public SocketAccepter(ServerSocket serv){
 			this.serverSock = serv;
 		}
@@ -541,8 +560,8 @@ public class Server {
 	private static String timeStamp(){
 		return "[" + (consoleDate.format(new Date(System.currentTimeMillis()))) + "]: ";
 	}
-	
-	
+
+
 
 	/**
 	 * Prints out an exception when it occurs. Only the stack
@@ -574,11 +593,11 @@ public class Server {
 		String stamped = timeStamp() + " " + message;
 		errorLog.writeLine(stamped);
 		System.err.println(stamped);
-		
+
 		log.writeLine(timeStamp() + "Error has occured. See error log.");
 	}
-	
-	
+
+
 	/**
 	 * Prints a line in the server and in the log. Time stamped
 	 */
@@ -602,8 +621,8 @@ public class Server {
 		//Server.messageSlack("New \nLine", "D024J9MFY");
 
 		RequestStruct derpreq = RequestStruct.createInstance("token=IwpHiALszaR2LZLLBPatrPN3&team_id=T024GLC9M&channel_id=C0291NEV5&channel_name=bot-forge&user_id=U024HATQ5&user_name=agamemnon&command=%2Fcheck&text=hiimkevin0uo");
-		
-		
+
+
 		String derp = "i";
 
 		String[] convert = derp.split("\\+");
@@ -618,7 +637,7 @@ public class Server {
 		System.out.println(d.get(Calendar.HOUR_OF_DAY));
 		}
 
-		
+
 	}
 	 */
 }

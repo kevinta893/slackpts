@@ -71,6 +71,7 @@ public class RequestStruct {
 		try {
 			attempt = new RequestStruct(payload);
 		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
 			attempt = null;
 		}
 		
