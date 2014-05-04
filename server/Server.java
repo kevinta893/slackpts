@@ -59,7 +59,7 @@ public class Server {
 	private Thread acceptThread;
 	private Thread maintanenceThread;					//see Maintenence Thread for maintentence interval
 
-
+	private long startTime;
 
 
 	private boolean running = true;						//server running or not
@@ -132,11 +132,12 @@ public class Server {
 			acceptThread = new Thread(new SocketAccepter(listenSock));
 			acceptThread.start();
 
-			//startTime = new Date(System.currentTimeMillis());							//server actually starts running here.
+			this.startTime = System.currentTimeMillis();							//server actually starts running here.
 
 			maintanenceThread = new Thread(new MaintenanceThread());
 			maintanenceThread.start();
 
+			
 
 			//move this thread into command line service
 			println("Server now running. Enter commands to maintain.");
@@ -558,7 +559,8 @@ public class Server {
 
 		private static final int MAINTENANCE_TIME = 300000; 		//every 5 minutes, run maintenance thread.
 
-
+		private SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+		
 		//the time to reset the logs.  Write new log at about 12:05 am. (aka 0:05)
 		private static final int HOUR_WINDOW = 0;
 		private static final int MINUTE_WINDOW_MIN = 5;
@@ -601,7 +603,16 @@ public class Server {
 
 					//maintain server here
 					saveAllFiles();
-					printRecord("--> Maintenance Thread saved all information");
+					
+					//compute running time.
+					long runTime = today.getTimeInMillis() - startTime;
+					long days = runTime / 86400000;
+					long hours = (runTime % 86400000) / 3600000;
+					long mins = ((runTime % 86400000) % 3600000) / 60000;
+					String totalRunTime = days + " days, " + hours + " hours, " + mins + " mins";
+					
+					//printmaintenance record.
+					printRecord("--> Maintenance Thread saved all information. Server running since " + formatter.format(startTime) + " (" + totalRunTime + ").");
 				} catch (InterruptedException e) {
 					printException(e);
 				}
