@@ -68,15 +68,19 @@ public class Server {
 
 	//private static Date startDate = new Date(System.currentTimeMillis());
 
-	public Server(int port){
+	public Server(){
+		
+		int port = Config.getPort();
+		
 		//check port arg
 		if ((port< MIN_PORT) && (port > MAX_PORT)){
 			throw new IllegalArgumentException("Invalid port given. Cannot create server with port " + port);
 		}
-
+		
+		
 		//create the listen socket
 		try {
-			listenSock = new ServerSocket(Config.getPort());
+			listenSock = new ServerSocket(port);
 
 		} catch (BindException e){
 			System.err.println(e.getMessage());

@@ -35,12 +35,12 @@ SOFTWARE.
  */
 public class Driver {
 	
-	private static final int DEFAULT_PORT = 48567;
+	//private static final int DEFAULT_PORT = 48567;
 	
 	public static void main(String[] args){
 		
 		
-		Server instance = new Server(DEFAULT_PORT);
+		Server instance = new Server();
 		
 		//register all commands
 		instance.registerCommand(new SlapCmd());
