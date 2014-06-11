@@ -43,7 +43,7 @@ public class RequestStruct {
 				command = getTagArg(payload, CMD_TAG).replaceAll("%2F", "/");			//replace "%2f" with forward slash
 				args = getTextArgs(payload);
 			} catch (Exception e) {
-				throw new IllegalArgumentException("Bad payload");
+				throw new IllegalArgumentException("Bad payload:\n" + payload);
 			}											
 		
 		

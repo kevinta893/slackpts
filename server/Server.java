@@ -69,15 +69,15 @@ public class Server {
 	//private static Date startDate = new Date(System.currentTimeMillis());
 
 	public Server(){
-		
+
 		int port = Config.getPort();
-		
+
 		//check port arg
 		if ((port< MIN_PORT) && (port > MAX_PORT)){
 			throw new IllegalArgumentException("Invalid port given. Cannot create server with port " + port);
 		}
-		
-		
+
+
 		//create the listen socket
 		try {
 			listenSock = new ServerSocket(port);
@@ -141,7 +141,7 @@ public class Server {
 			maintanenceThread = new Thread(new MaintenanceThread());
 			maintanenceThread.start();
 
-			
+
 
 			//move this thread into command line service
 			println("Server now running. Enter commands to maintain.");
@@ -232,9 +232,9 @@ public class Server {
 
 
 	private static final int RESEND_COUNT = 5;
-	
-	
-	
+
+
+
 	private static final int RETRY_WINDOW = 10;			//retry window of 10 seconds
 	/**
 	 * Posts a message on slack on the specified channel
@@ -265,10 +265,10 @@ public class Server {
 
 
 			//System.out.println(message);
-			
-			
+
+
 			long enlapsedSeconds = System.currentTimeMillis();
-			
+
 			//attempt to send the message
 			boolean sendSuccess = false;
 			int tryCount = 0;
@@ -278,7 +278,7 @@ public class Server {
 				try {
 
 					sendMessage(message);
-					
+
 					sendSuccess = true;
 				} catch (UnknownHostException e){
 					//unknown host. try again
@@ -288,14 +288,14 @@ public class Server {
 					printRecord("Error, could not send message to Slack, retrying... (attempt #" + tryCount + ")");
 					printException(e);
 				}
-				
+
 				//wait one second to retry
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-				
+
 				enlapsedSeconds = Math.abs(System.currentTimeMillis() - enlapsedSeconds);
 				//if out of time, fail and break loop
 				if (enlapsedSeconds > (RETRY_WINDOW * 1000)){
@@ -303,8 +303,8 @@ public class Server {
 					break;
 				}
 			}
-			
-			
+
+
 			//if resending was a major failure report
 			if (tryCount == RESEND_COUNT){
 				printRecord("Error! Attempted to send message to Slack " + tryCount + " times and failed. See error log for exceptions.");
@@ -349,7 +349,7 @@ public class Server {
 
 		private Socket client;
 		private RequestCallback caller;
-		
+
 		public RequestHandler(Socket client, RequestCallback caller){
 			this.client = client;
 			this.caller = caller;
@@ -360,7 +360,7 @@ public class Server {
 			doWork();
 			caller.done();			
 		}
-		
+
 		private void doWork(){
 			try {
 				BufferedReader buff = new BufferedReader(new InputStreamReader(client.getInputStream(), "UTF-8"));
@@ -387,59 +387,62 @@ public class Server {
 					//with complete request, find the command sent
 					RequestStruct req = RequestStruct.createInstance(payload);
 
-
-					//print command out
-					String fullCommand = req.getCommand();
-					String[] args = req.getArgs();
-					for (int i =0; i < args.length; i++){
-						fullCommand = fullCommand + " " + args[i];
+					if (req == null){
+						printError("Error! Could not parse request. Payload given was:\n" + payload);
 					}
-					printRecord("<SLACK_CMD> " + req.getUserName() + " issued command: \t" + fullCommand);
-
-
-					boolean didSomething = false;
-					for (Command com : commands){
-
-						//go through each command and see if they apply
-						if (com.isCommand(req.getCommand())){
-							didSomething = true;
-							CmdResult cmdResult = com.doRequest(req);
-
-							if (cmdResult == CmdResult.SUCCESS){
-								//request process is successful. report back
-								messageSlack(com.getReturnMessage(), com.getReturnChannel());
-								printRecord(com.getLogMessage());
-							}
-							else if (cmdResult == CmdResult.SUCCESS_NO_REPORT){
-								//request processed, no need to report its log
-								messageSlack(com.getReturnMessage(), com.getReturnChannel());
-								println("Request Successful.");
-							}
-							else if (cmdResult == CmdResult.FAILED){
-								//request failed, requires error to be posted
-								messageSlack(com.getReturnMessage(), com.getReturnChannel());
-								printError(com.getErrorMessage());
-							}
-							else if (cmdResult == CmdResult.SUCCESS_SILENT){
-								//success, do not report back to slack
-								printRecord(com.getErrorMessage());
-							}
-							else if (cmdResult == CmdResult.FAILED_SILENT){
-								//failed, do not report back to slack
-								printError(com.getErrorMessage());
-							}
-							else if (cmdResult == CmdResult.INVALID){ 
-								//do nothing
-							}
-
+					else{
+						//print command out
+						String fullCommand = req.getCommand();
+						String[] args = req.getArgs();
+						for (int i =0; i < args.length; i++){
+							fullCommand = fullCommand + " " + args[i];
 						}
+						printRecord("<SLACK_CMD> " + req.getUserName() + " issued command: \t" + fullCommand);
+
+
+						boolean didSomething = false;
+						for (Command com : commands){
+
+							//go through each command and see if they apply
+							if (com.isCommand(req.getCommand())){
+								didSomething = true;
+								CmdResult cmdResult = com.doRequest(req);
+
+								if (cmdResult == CmdResult.SUCCESS){
+									//request process is successful. report back
+									messageSlack(com.getReturnMessage(), com.getReturnChannel());
+									printRecord(com.getLogMessage());
+								}
+								else if (cmdResult == CmdResult.SUCCESS_NO_REPORT){
+									//request processed, no need to report its log
+									messageSlack(com.getReturnMessage(), com.getReturnChannel());
+									println("Request Successful.");
+								}
+								else if (cmdResult == CmdResult.FAILED){
+									//request failed, requires error to be posted
+									messageSlack(com.getReturnMessage(), com.getReturnChannel());
+									printError(com.getErrorMessage());
+								}
+								else if (cmdResult == CmdResult.SUCCESS_SILENT){
+									//success, do not report back to slack
+									printRecord(com.getErrorMessage());
+								}
+								else if (cmdResult == CmdResult.FAILED_SILENT){
+									//failed, do not report back to slack
+									printError(com.getErrorMessage());
+								}
+								else if (cmdResult == CmdResult.INVALID){ 
+									//do nothing
+								}
+
+							}
+						}
+
+						if (didSomething == false){
+							messageSlack("Sorry I don't understand that command. :frown:", req.getChannelName());
+						}
+
 					}
-
-					if (didSomething == false){
-						messageSlack("Sorry I don't understand that command. :frown:", req.getChannelName());
-					}
-
-
 
 				}
 			} catch (IOException e) {
@@ -487,11 +490,11 @@ public class Server {
 		private ServerSocket serverSock;
 
 		private volatile int serviceCount = 0;
-		
+
 		private static final int MAX_REQUEST_COUNT = 7;
 		private static final int BAN_SECONDS = 30;						//negative number for infinite ban till server restart.
-		
-		
+
+
 		public SocketAccepter(ServerSocket serv){
 			this.serverSock = serv;
 		}
@@ -500,40 +503,40 @@ public class Server {
 		public void run() {
 
 			while( running == true ){
-				
-				
-				
-				
+
+
+
+
 				try {
 					Socket client = serverSock.accept();
 
 					//should not request more than max
 					serviceCount++;
-					
-					
+
+
 					if (serviceCount >= MAX_REQUEST_COUNT){
 						printRecord("Warning! Max request count reached. Spammer alert! Server refusing requests for " + BAN_SECONDS + " seconds.");
 						Thread.sleep(BAN_SECONDS*1000);
 					}
-					
-					
-					
+
+
+
 					//got a connection
 					println("Recieved connection from: " + client.getInetAddress().getHostAddress() + ":" + client.getPort());
 
 					//handle request in new thread
 					Thread clientHandler = new Thread(new RequestHandler(client, this));
 					clientHandler.start();
-					
-					
-					
+
+
+
 				} catch (IOException e) {
 					printException(e);
 				} catch (InterruptedException e) {
 					printException(e);
 				}
-				
-				
+
+
 			}
 
 
@@ -550,13 +553,13 @@ public class Server {
 			serviceCount--;
 		}
 
-		
+
 	}
 	private interface RequestCallback{
 		void done();
 	}
-	
-	
+
+
 
 
 	private final class MaintenanceThread implements Runnable{
@@ -564,7 +567,7 @@ public class Server {
 		private static final int MAINTENANCE_TIME = 300000; 		//every 5 minutes, run maintenance thread.
 
 		private SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-		
+
 		//the time to reset the logs.  Write new log at about 12:05 am. (aka 0:05)
 		private static final int HOUR_WINDOW = 0;
 		private static final int MINUTE_WINDOW_MIN = 5;
@@ -607,14 +610,14 @@ public class Server {
 
 					//maintain server here
 					saveAllFiles();
-					
+
 					//compute running time.
 					long runTime = today.getTimeInMillis() - startTime;
 					long days = runTime / 86400000;
 					long hours = (runTime % 86400000) / 3600000;
 					long mins = ((runTime % 86400000) % 3600000) / 60000;
 					String totalRunTime = days + " days, " + hours + " hours, " + mins + " mins";
-					
+
 					//printmaintenance record.
 					printRecord("--> Maintenance Thread saved all information. Server running since " + formatter.format(startTime) + " (" + totalRunTime + ").");
 				} catch (InterruptedException e) {
