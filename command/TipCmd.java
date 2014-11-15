@@ -68,7 +68,7 @@ public class TipCmd extends Command{
 			}
 			else{
 				//no mapping found, return error
-				returnMessage = "I do not recognize who " + args[0] + " is! Did that user get an account with the bank of Slack? Get that user to enter the command /register to sign up. If you already have an account, but changed your name recently please enter the command /register ASAP.";
+				returnMessage = "I do not recognize who " + args[0] + " is! Ask that user to enter /register to get an account. Register again if you have changed your username.";
 				return CmdResult.SUCCESS;
 			}
 
