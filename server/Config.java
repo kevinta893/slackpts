@@ -32,7 +32,9 @@ public class Config{
 	private static final String BOT_NAME_FIELD = "bot-name";
 	private static final String CURRENCY_NAME_FIELD = "currency-name";
 	private static final String SERVER_PORT_FIELD = "server-port";
+	private static final String DEFAULT_CHANNEL_FIELD = "default-channel";
 	
+	private static final String DEFAULT_ICON_URL_FIELD = "default-icon-url";
 	private static HashMap<String, String> properties = new HashMap<String, String>();
 
 
@@ -152,6 +154,8 @@ public class Config{
 		properties.put(BOT_NAME_FIELD, "slackbot");
 		properties.put(CURRENCY_NAME_FIELD, "gold");
 		
+		properties.put(DEFAULT_CHANNEL_FIELD, "#channel");
+		properties.put(DEFAULT_ICON_URL_FIELD, "http://");
 	}
 
 	public static int getCount(){
@@ -175,4 +179,11 @@ public class Config{
 		return Integer.parseInt(properties.get(SERVER_PORT_FIELD));
 	}
 
+	public static String getDefaultChannel(){
+		return properties.get(DEFAULT_CHANNEL_FIELD);
+	}
+	
+	public static String getDefaultIconURL(){
+		return properties.get(DEFAULT_ICON_URL_FIELD);
+	}
 }

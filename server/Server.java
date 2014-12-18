@@ -24,6 +24,10 @@ import org.apache.http.impl.client.HttpClients;
 import command.Command;
 import command.Command.CmdResult;
 import command.RequestStruct;
+import command.SlackMessage;
+import command.SlackMessage.IconType;
+import command.SlackMessage.SlackAttachment;
+import command.SlackMessage.SlackField;
 
 
 /**
@@ -129,9 +133,9 @@ public class Server {
 			println("Starting server on port " + Config.getPort() + "...");
 			System.out.println("\n=====================================================");
 
-
-
-
+			
+		
+			
 			//create the handling thread and run it.
 			acceptThread = new Thread(new SocketAccepter(listenSock));
 			acceptThread.start();
@@ -238,7 +242,9 @@ public class Server {
 
 	private static final int RESEND_COUNT = 5;
 
-
+	private void messageSlack(String message, String channel){
+		messageSlack(new SlackMessage(message, channel));
+	}
 
 	private static final int RETRY_WINDOW = 10;			//retry window of 10 seconds
 	/**
@@ -248,25 +254,16 @@ public class Server {
 	 * @param message
 	 * @param channel
 	 */
-	private void messageSlack(String textPost, String channel){
+	private void messageSlack(SlackMessage message){
 		//System.out.println(textPost);
 
 
 
 		if(silent == false){
 
-			//convert all new lines into proper characters
-			textPost = textPost.replaceAll("\n", "`\\\\n`");
-
-
-			String message;
+			String send;
 			//construct the JSON message
-			if (channel != null){
-				message = "payload={\"text\":\"`" + textPost + "`\", \"channel\":\"#" + channel + "\", \"username\": \"" + Config.getBotName() + "\"}";
-			}
-			else{
-				message = "payload={\"text\":\"`" + textPost + "`\", \"username\": \"" + Config.getBotName() + "\"}";
-			}
+			send = "payload=" + message.getJSON();
 
 
 			//System.out.println(message);
@@ -282,7 +279,7 @@ public class Server {
 
 				try {
 
-					sendMessage(message);
+					sendMessage(send);
 
 					sendSuccess = true;
 				} catch (UnknownHostException e){
@@ -317,7 +314,7 @@ public class Server {
 		}
 		else{
 			//silent mode, should print out the reply that should have been
-			println(textPost);
+			println(message.getMessage());
 		}
 	}
 
