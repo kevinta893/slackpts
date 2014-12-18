@@ -199,7 +199,7 @@ public class Server {
 					messageSlack(split[1], split[0]);
 				}
 				else{
-					println("To use /message, enter channel name then the message to send.");
+					println("To use /message, enter channel name then the message to send no qoutations expected.");
 				}
 
 			}
@@ -227,6 +227,11 @@ public class Server {
 		in.close();
 		System.exit(0);
 	}
+
+	
+	
+	
+	
 
 
 
