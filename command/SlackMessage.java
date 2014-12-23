@@ -16,7 +16,7 @@ import server.Config;
  */
 public class SlackMessage {
 
-
+	private static final String DEFAULT_COLOR = "#E3E4E6";
 
 	private String message;
 	private String channel;
@@ -87,15 +87,11 @@ public class SlackMessage {
 	 * Sets the channel for the text to be sent on.
 	 * #channel for public channels 
 	 * @channel for direct messages (posted as slackbot for that user)
+	 * A channel ID is sufficient for specifying a channel.
 	 * @param channel
 	 */
 	public void setChannel(String channel){
-		if ((channel.charAt(0) == '#') || (channel.charAt(0) == '@')){
-			this.channel = channel;
-		}
-		else{
-			throw new IllegalArgumentException("Invalid channel specifier. Required # or @ prefix. channel=" + channel);
-		}
+		this.channel = channel;
 	}
 	
 
@@ -183,7 +179,7 @@ public class SlackMessage {
 
 		private String fallback;
 		private String pretext;
-		private String color = "#00B200";
+		private String color = DEFAULT_COLOR;
 		
 		private LinkedList<SlackField> fields;
 
@@ -211,6 +207,9 @@ public class SlackMessage {
 
 
 		public void setColor(String color){
+			if ((color.charAt(0) != '#') || (color.length() != 7)){
+				throw new IllegalArgumentException("Invalid hex. 6 digit hex with # prefix required.");
+			}
 			this.color = color;
 		}
 

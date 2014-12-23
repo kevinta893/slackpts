@@ -3,6 +3,7 @@ package command;
 import server.Config;
 import server.UserDB;
 import server.UserMapping;
+import server.WorkStream;
 
 
 /**
@@ -16,10 +17,7 @@ public class RegisterCmd extends Command{
 	private static final String COMMAND = "/register";
 
 
-	private String returnMessage;
-	private String returnChannel;
 	private String logMessage;
-	private String errorMessage;
 
 
 	public RegisterCmd() {
@@ -29,8 +27,8 @@ public class RegisterCmd extends Command{
 
 
 	@Override
-	public CmdResult doRequest(RequestStruct req) {
-		returnChannel = req.getChannelName();
+	public int doRequest(WorkStream ws, RequestStruct req) {
+		String returnMessage = null;
 
 		String userName = req.getUserName();
 		String userID = req.getUserID();
@@ -47,10 +45,12 @@ public class RegisterCmd extends Command{
 			UserDB.saveAll();
 
 			logMessage = "Added " + userName + " as new ID: " + userID;
-
+			ws.logPrintln(logMessage);
+			
 			returnMessage = "Welcome "+ userName + "! You have " + UserDB.getUser(userID).getPts() 
 					+ Config.getCurrencyName() + ". Earn more by getting tips from friends.";
-			return CmdResult.SUCCESS;
+			ws.messageSlack(new SlackMessage(returnMessage, req.getChannelID()));
+			return 0;
 		}
 		else{
 			String oldName = UserMapping.getName(userID);
@@ -60,26 +60,16 @@ public class RegisterCmd extends Command{
 				UserMapping.saveAll();
 
 				logMessage = "Updated " + oldName + " -> " + userName;
-
+				ws.logPrintln(logMessage);
+				
 				returnMessage = "Gotcha! I'll remember you as " + userName + " from now on.";
-				return CmdResult.SUCCESS;
+				ws.messageSlack(new SlackMessage(returnMessage, req.getChannelID()));
+				return 0;
 			}
 		}
 		
 		
-		return CmdResult.INVALID;
-	}
-
-
-	@Override
-	public String getReturnMessage() {
-		return returnMessage;
-	}
-
-
-	@Override
-	public String getReturnChannel() {
-		return returnChannel;
+		return -1;
 	}
 
 
@@ -88,9 +78,4 @@ public class RegisterCmd extends Command{
 		return logMessage;
 	}
 
-
-	@Override
-	public String getErrorMessage() {
-		return errorMessage;
-	}
 }

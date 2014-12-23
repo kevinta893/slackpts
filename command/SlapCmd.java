@@ -1,6 +1,7 @@
 package command;
 
 import server.Config;
+import server.WorkStream;
 
 
 /**
@@ -13,10 +14,8 @@ public class SlapCmd extends Command{
 private static final String COMMAND = "/slap";
 	
 	
-	private String returnMessage;
-	private String returnChannel;
 	private String logMessage;
-	private String errorMessage;
+
 	
 	
 	
@@ -28,8 +27,8 @@ private static final String COMMAND = "/slap";
 
 
 	@Override
-	public CmdResult doRequest(RequestStruct req) {
-		returnChannel = req.getChannelName();
+	public int doRequest(WorkStream ws, RequestStruct req) {
+		String returnMessage = null;
 		
 		
 		String[] args = req.getArgs();
@@ -68,32 +67,15 @@ private static final String COMMAND = "/slap";
 			returnMessage = Config.getBotName() + " slaps " + victim + " with a " + perp + "! Critical hit! 5x Combo!";
 		}
 		
-		
-		return CmdResult.SUCCESS_NO_REPORT;
+		ws.messageSlack(new SlackMessage(returnMessage, req.getChannelID()));
+		return 0;
 	}
 
-
-	@Override
-	public String getReturnMessage() {
-		return returnMessage;
-	}
-
-
-	@Override
-	public String getReturnChannel() {
-		return returnChannel;
-	}
 
 
 	@Override
 	public String getLogMessage() {
 		return logMessage;
-	}
-
-
-	@Override
-	public String getErrorMessage() {
-		return errorMessage;
 	}
 
 }

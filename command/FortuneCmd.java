@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Random;
 
+import server.WorkStream;
+
 
 /**
  * The command that returns a fortune for a paritular
@@ -21,10 +23,8 @@ public class FortuneCmd extends Command{
 	private static final String COMMAND = "/fortune";
 
 
-	private String returnMessage;
-	private String returnChannel;
 	private String logMessage;
-	private String errorMessage;
+
 
 
 	private FortuneList list = new FortuneList();				//should only have one copy.
@@ -36,8 +36,8 @@ public class FortuneCmd extends Command{
 
 
 	@Override
-	public CmdResult doRequest(RequestStruct req) {
-		returnChannel = req.getChannelName();
+	public int doRequest(WorkStream ws, RequestStruct req) {
+
 
 		//get today's date
 		Calendar today = Calendar.getInstance();
@@ -49,9 +49,9 @@ public class FortuneCmd extends Command{
 
 		int index = randInt(seed, frame) % list.getCount();
 
-		returnMessage = req.getUserName() + "'s fortune today is:\n" + list.getFortune(index);
-
-		return CmdResult.SUCCESS_NO_REPORT;
+		String returnMessage = req.getUserName() + "'s fortune today is:\n" + list.getFortune(index);
+		ws.messageSlack(new SlackMessage(returnMessage, req.getChannelID()));
+		return 0;
 	}
 
 
@@ -70,26 +70,8 @@ public class FortuneCmd extends Command{
 
 
 	@Override
-	public String getReturnMessage() {
-		return returnMessage;
-	}
-
-
-	@Override
-	public String getReturnChannel() {
-		return returnChannel;
-	}
-
-
-	@Override
 	public String getLogMessage() {
 		return logMessage;
-	}
-
-
-	@Override
-	public String getErrorMessage() {
-		return errorMessage;
 	}
 
 

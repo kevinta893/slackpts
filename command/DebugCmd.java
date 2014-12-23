@@ -1,5 +1,7 @@
 package command;
 
+import server.WorkStream;
+
 
 /**
  * The debugging command that returns the payload
@@ -11,10 +13,7 @@ public class DebugCmd extends Command {
 	private static final String COMMAND = "/debug";
 	
 	
-	private String returnMessage;
-	private String returnChannel;
 	private String logMessage;
-	private String errorMessage;
 	
 	
 	public DebugCmd() {
@@ -24,36 +23,18 @@ public class DebugCmd extends Command {
 
 
 	@Override
-	public CmdResult doRequest(RequestStruct req) {
-		returnChannel = req.getChannelName();
+	public int doRequest(WorkStream ws, RequestStruct req) {
+
 		
 		//return the payload.
-		returnMessage = req.toString();
+		String returnMessage = req.toString();
 		
-		return CmdResult.SUCCESS_NO_REPORT;
+		ws.messageSlack(new SlackMessage(returnMessage, req.getChannelID()));
+		return 0;
 	}
-
-
-	@Override
-	public String getReturnMessage() {
-		return returnMessage;
-	}
-
-
-	@Override
-	public String getReturnChannel() {
-		return returnChannel;
-	}
-
 
 	@Override
 	public String getLogMessage() {
 		return logMessage;
-	}
-
-
-	@Override
-	public String getErrorMessage() {
-		return errorMessage;
 	}
 }

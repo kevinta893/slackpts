@@ -1,5 +1,7 @@
 package command;
 
+import server.WorkStream;
+
 
 /**
  * Template class. Should be used as a template only.
@@ -10,11 +12,8 @@ public final class Template extends Command {
 
 	private static final String COMMAND = "";
 	
-	
-	private String returnMessage;
-	private String returnChannel;
+
 	private String logMessage;
-	private String errorMessage;
 	
 	
 	public Template() {
@@ -24,22 +23,11 @@ public final class Template extends Command {
 
 
 	@Override
-	public CmdResult doRequest(RequestStruct req) {
-		returnChannel = req.getChannelName();
+	public int doRequest(WorkStream ws, RequestStruct req) {
 		
-		return CmdResult.SUCCESS_NO_REPORT;
-	}
-
-
-	@Override
-	public String getReturnMessage() {
-		return returnMessage;
-	}
-
-
-	@Override
-	public String getReturnChannel() {
-		return returnChannel;
+		ws.messageSlack(new SlackMessage("Hello World", req.getChannelID()));
+		logMessage = "Runtime errors or comments here";
+		return 0;
 	}
 
 
@@ -49,9 +37,6 @@ public final class Template extends Command {
 	}
 
 
-	@Override
-	public String getErrorMessage() {
-		return errorMessage;
-	}
+	
 
 }

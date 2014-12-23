@@ -9,7 +9,11 @@ public class RequestStruct {
 
 
 	//payload tags in Slack POST
-	public static final String PAYLOAD_START = "token=";
+	public static final String TOKEN_TAG = "token=";			//payload start
+	public static final String TEAM_ID_TAG = "team_id=";
+	public static final String TEAM_DOMAIN_TAG = "team_domain=";
+	
+	
 	public static final String CMD_TAG = "command=";
 	public static final String TEXT_TAG = "text=";
 	public static final String CHANNEL_NAME_TAG = "channel_name=";
@@ -21,6 +25,9 @@ public class RequestStruct {
 	private String payload;
 
 	private String token; 
+	private String teamId;
+	private String teamDomain;
+	
 	private String channelName; 
 	private String channelID;
 	private String userID; 
@@ -35,7 +42,10 @@ public class RequestStruct {
 		this.payload = payload;
 	
 			try {
-				token = getTagArg(payload, PAYLOAD_START);
+				token = getTagArg(payload, TOKEN_TAG);
+				teamId = getTagArg(payload, TEAM_ID_TAG);
+				teamDomain= getTagArg(payload, TEAM_DOMAIN_TAG);
+				
 				channelName = getTagArg(payload, CHANNEL_NAME_TAG);
 				channelID = getTagArg(payload, CHANNEL_ID_TAG);
 				userID = getTagArg(payload, USER_ID_TAG);
@@ -58,10 +68,11 @@ public class RequestStruct {
 	
 
 	/**
-	 * Creates a structure of the payload.
+	 * Creates a structure of the payload. Required for exception safe catch.
 	 * If its an invalid payload, then the returned class is null.
 	 * @param payload
-	 * @return Null if the instance cannot be crated with the given payload
+	 * @return Null if the instance cannot be created with the given payload
+	 * 
 	 */
 	public static RequestStruct createInstance(String payload){
 		
@@ -172,7 +183,22 @@ public class RequestStruct {
 		return args;
 	}
 	
-	
+	public String getTeamId() {
+		return teamId;
+	}
+
+	public String getTeamDomain() {
+		return teamDomain;
+	}
+
+
+
+
+
+
+
+
+
 	/**
 	 * Returns the payload as represented by this struct
 	 * Formatted payload appears with newline characters

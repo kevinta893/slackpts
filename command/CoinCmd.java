@@ -1,5 +1,7 @@
 package command;
 
+import server.WorkStream;
+
 
 
 /**
@@ -12,11 +14,8 @@ public class CoinCmd extends Command{
 
 	private static final String COMMAND = "/coin";
 
-
-	private String returnMessage;
-	private String returnChannel;
 	private String logMessage;
-	private String errorMessage;
+
 
 
 	public CoinCmd() {
@@ -26,27 +25,18 @@ public class CoinCmd extends Command{
 
 
 	@Override
-	public CmdResult doRequest(RequestStruct req) {
-		returnChannel = req.getChannelName();
+	public int doRequest(WorkStream ws, RequestStruct req) {		
 
 		String result = (Rand.randBoolean() == true) ? "heads" : "tails";
 
-		returnMessage = "Flipping a coin...\nIt's *" + result + "*";
+		String returnMessage = "Flipping a coin...\nIt's *" + result + "*";
 
-		return CmdResult.SUCCESS_NO_REPORT;
+		ws.messageSlack(new SlackMessage(returnMessage, req.getChannelID()));
+		return 0;
 	}
 
 
-	@Override
-	public String getReturnMessage() {
-		return returnMessage;
-	}
 
-
-	@Override
-	public String getReturnChannel() {
-		return returnChannel;
-	}
 
 
 	@Override
@@ -54,9 +44,4 @@ public class CoinCmd extends Command{
 		return logMessage;
 	}
 
-
-	@Override
-	public String getErrorMessage() {
-		return errorMessage;
-	}
 }

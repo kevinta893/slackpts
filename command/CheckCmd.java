@@ -4,6 +4,7 @@ import server.Config;
 import server.User;
 import server.UserDB;
 import server.UserMapping;
+import server.WorkStream;
 
 /**
  * Command that checks how many points a user or self has
@@ -15,10 +16,7 @@ public class CheckCmd extends Command {
 	private static final String COMMAND = "/check";
 
 
-	private String returnMessage;
-	private String returnChannel;
 	private String logMessage;
-	private String errorMessage;
 
 
 	public CheckCmd() {
@@ -28,12 +26,12 @@ public class CheckCmd extends Command {
 
 
 	@Override
-	public CmdResult doRequest(RequestStruct req) {
+	public int doRequest(WorkStream ws, RequestStruct req) {
 		String[] args = req.getArgs();
-		returnChannel = req.getChannelName();
+		SlackMessage returnMessage = null;
 		
 		//check command sent, return current points.
-
+	
 		if (args.length == 1){
 			//arg specified, check that user
 
@@ -45,14 +43,16 @@ public class CheckCmd extends Command {
 					//user exists, return their count.
 					User check = UserDB.getUser(targetID);
 					String humanName = UserMapping.getName(targetID);
-					returnMessage = humanName + " has " + check.getPts() + Config.getCurrencyName() + ".";
-					return CmdResult.SUCCESS_NO_REPORT;
+					returnMessage = new SlackMessage(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", req.getChannelName());
+					ws.messageSlack(returnMessage);
+					return 0;
 				}
 			}
 			else{
 				//no such user exists, report back
-				returnMessage = "No such user named " + args[0] + " exists. Have they registered yet?";
-				return CmdResult.SUCCESS_NO_REPORT;
+				returnMessage = new SlackMessage("No such user named " + args[0] + " exists. Have they registered yet?", "#" + req.getChannelName());
+				ws.messageSlack(returnMessage);
+				return 0;
 			}
 
 		}
@@ -67,41 +67,27 @@ public class CheckCmd extends Command {
 					//user exists, return their count.
 					User check = UserDB.getUser(targetID);
 					String humanName = UserMapping.getName(targetID);
-					returnMessage = humanName + " has " + check.getPts() + Config.getCurrencyName() + ".";
-					return CmdResult.SUCCESS_NO_REPORT;
+					returnMessage = new SlackMessage(humanName + " has " + check.getPts() + Config.getCurrencyName() + ".", "#" + req.getChannelName());
+					ws.messageSlack(returnMessage);
+					return 0;
 				}
 			}
 			else{
 				//no such user exists, report back
-				returnMessage = "I cannot find your record " + req.getUserName() + ". Have you registered yet?";
-				return CmdResult.SUCCESS_NO_REPORT;
+				returnMessage = new SlackMessage("I cannot find your record " + req.getUserName() + ". Have you registered yet?", "#" + req.getChannelName());
+				ws.messageSlack(returnMessage);
+				return 0;
 			}
 		}
 
-		return CmdResult.INVALID;
-	}
-
-
-	@Override
-	public String getReturnMessage() {
-		return returnMessage;
-	}
-
-
-	@Override
-	public String getReturnChannel() {
-		return returnChannel;
+		
+		logMessage = "ERROR! Invalid arguements.";
+		return -1;
 	}
 
 
 	@Override
 	public String getLogMessage() {
 		return logMessage;
-	}
-
-
-	@Override
-	public String getErrorMessage() {
-		return errorMessage;
 	}
 }

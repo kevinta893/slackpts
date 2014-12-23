@@ -12,7 +12,7 @@ import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 import org.apache.http.HttpResponse;
@@ -22,7 +22,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import command.Command;
-import command.Command.CmdResult;
 import command.RequestStruct;
 import command.SlackMessage;
 import command.SlackMessage.IconType;
@@ -44,7 +43,7 @@ public class Server {
 	public static final int INCREMENT = 1;
 
 
-	private LinkedList<Command> commands = new LinkedList<Command>();
+	private HashMap<String, Command> commands = new HashMap<String, Command>();
 
 	private ServerSocket listenSock;
 
@@ -58,6 +57,7 @@ public class Server {
 	private static final String LOG_FILENAME = "log";
 	private static final String ERROR_LOG_FILENAME = "errorLog";
 
+	private static ServerStream stream;
 
 	//threads
 	private Thread acceptThread;
@@ -82,6 +82,9 @@ public class Server {
 		}
 
 
+		//create output stream
+		stream = new ServerStream(this);
+		
 		//create the listen socket
 		try {
 			listenSock = new ServerSocket(port);
@@ -134,7 +137,37 @@ public class Server {
 			System.out.println("\n=====================================================");
 
 			
+			
+			SlackMessage test = new SlackMessage("", "C0291NEV5");
+			test.setUnfurlLinks(true);
+			test.setUsername("slackbot");
+			test.setUserIcon(":smile:", IconType.EMOJI);
+			SlackAttachment a = new SlackAttachment("");
+			a.setPretext("http://www.kyubeypawnshop.net/slack_server_icons/lucina_icon.png");
 		
+			//test.setUnfurlLinks(true);
+			test.addAttachment(a);
+			//test.addAttachment(a);
+			/*
+			SlackField f = new SlackField("", "Hey");
+			a.setColor("#FF0000");
+			a.addField(f);
+			
+			SlackAttachment a2 = new SlackAttachment("");
+			a2.setColor("#00FF00");
+			a2.addField(f);
+			test.addAttachment(a2);
+			
+			SlackAttachment a3 = new SlackAttachment("");
+			a3.setColor("#0000FF");
+			a3.addField(f);
+			test.addAttachment(a3);
+			//a.addField(f);
+			 */
+			messageSlack(test);
+			System.out.println(SlackMessage.dumpString(test.getJSON()));
+			System.exit(0);
+			
 			
 			//create the handling thread and run it.
 			acceptThread = new Thread(new SocketAccepter(listenSock));
@@ -247,6 +280,8 @@ public class Server {
 	}
 
 	private static final int RETRY_WINDOW = 10;			//retry window of 10 seconds
+	
+	
 	/**
 	 * Posts a message on slack on the specified channel
 	 * 
@@ -402,48 +437,18 @@ public class Server {
 						printRecord("<SLACK_CMD> " + req.getUserName() + " issued command: \t" + fullCommand);
 
 
-						boolean didSomething = false;
-						for (Command com : commands){
-
-							//go through each command and see if they apply
-							if (com.isCommand(req.getCommand())){
-								didSomething = true;
-								CmdResult cmdResult = com.doRequest(req);
-
-								if (cmdResult == CmdResult.SUCCESS){
-									//request process is successful. report back
-									messageSlack(com.getReturnMessage(), com.getReturnChannel());
-									printRecord(com.getLogMessage());
-								}
-								else if (cmdResult == CmdResult.SUCCESS_NO_REPORT){
-									//request processed, no need to report its log
-									messageSlack(com.getReturnMessage(), com.getReturnChannel());
-									println("Request Successful.");
-								}
-								else if (cmdResult == CmdResult.FAILED){
-									//request failed, requires error to be posted
-									messageSlack(com.getReturnMessage(), com.getReturnChannel());
-									printError(com.getErrorMessage());
-								}
-								else if (cmdResult == CmdResult.SUCCESS_SILENT){
-									//success, do not report back to slack
-									printRecord(com.getErrorMessage());
-								}
-								else if (cmdResult == CmdResult.FAILED_SILENT){
-									//failed, do not report back to slack
-									printError(com.getErrorMessage());
-								}
-								else if (cmdResult == CmdResult.INVALID){ 
-									//do nothing
-								}
-
-							}
+						
+						Command com = commands.get(req.getCommand());
+						if (com != null){
+							//do command
+							//int runCode = com.doRequest(stream, req);
+							com.doRequest(stream, req);
 						}
-
-						if (didSomething == false){
+						else{
+							//unreqconized command.
 							messageSlack("Sorry I don't understand that command. :frown:", req.getChannelName());
 						}
-
+						
 					}
 
 				}
@@ -474,7 +479,7 @@ public class Server {
 	 * @param cmd
 	 */
 	public void registerCommand(Command cmd){
-		commands.add(cmd);
+		commands.put(cmd.commandName, cmd);
 	}
 
 
@@ -706,6 +711,47 @@ public class Server {
 
 
 
+	private class ServerStream implements WorkStream{
+
+		private Server instance;
+		
+		public ServerStream(Server s){
+			this.instance = s;
+		}
+		
+		@Override
+		public void outPrintln(String out) {
+			System.out.println();
+		}
+
+		@Override
+		public void errPrintln(String err) {
+			System.err.println(err);
+		}
+
+		@Override
+		public void logPrintln(String out) {
+			instance.printRecord(out);
+		}
+
+		@Override
+		public void errLogPrintln(String err) {	
+			instance.printError(err);
+		}
+
+		@Override
+		public boolean messageSlack(SlackMessage message) {
+			//TODO change Message slack to boolean and report real message status (currently true regardless if sent)
+			instance.messageSlack(message);
+			return true;
+		}
+
+		@Override
+		public void errLogPrintln(Exception e) {
+			instance.printException(e);
+		}
+		
+	}
 
 	/*
 	public static void main(String[] args){
