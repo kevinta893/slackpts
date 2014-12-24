@@ -24,9 +24,6 @@ import org.apache.http.impl.client.HttpClients;
 import command.Command;
 import command.RequestStruct;
 import command.SlackMessage;
-import command.SlackMessage.IconType;
-import command.SlackMessage.SlackAttachment;
-import command.SlackMessage.SlackField;
 
 
 /**
@@ -137,16 +134,17 @@ public class Server {
 			System.out.println("\n=====================================================");
 
 			
-			
-			SlackMessage test = new SlackMessage("", "C0291NEV5");
-			test.setUnfurlLinks(true);
+			/*
+			SlackMessage test = new SlackMessage("http://www.kyubeypawnshop.net/slack_server_icons/lucina_icon.png", "C0291NEV5");
 			test.setUsername("slackbot");
-			test.setUserIcon(":smile:", IconType.EMOJI);
-			SlackAttachment a = new SlackAttachment("");
-			a.setPretext("http://www.kyubeypawnshop.net/slack_server_icons/lucina_icon.png");
+			test.setUserIcon(":frowning:", IconType.EMOJI);
+			SlackAttachment a = new SlackAttachment("<http://www.kyubeypawnshop.net/slack_server_icons/lucina_icon.png>");
+			a.setPretext("<http://www.kyubeypawnshop.net/slack_server_icons/lucina_icon.png>");
 		
+			test.setUnfurlLinks(true);
+			test.setUnfurlMedia(true);
 			//test.setUnfurlLinks(true);
-			test.addAttachment(a);
+			//test.addAttachment(a);
 			//test.addAttachment(a);
 			/*
 			SlackField f = new SlackField("", "Hey");
@@ -163,11 +161,11 @@ public class Server {
 			a3.addField(f);
 			test.addAttachment(a3);
 			//a.addField(f);
-			 */
+			 
 			messageSlack(test);
 			System.out.println(SlackMessage.dumpString(test.getJSON()));
 			System.exit(0);
-			
+			*/
 			
 			//create the handling thread and run it.
 			acceptThread = new Thread(new SocketAccepter(listenSock));
@@ -446,7 +444,7 @@ public class Server {
 						}
 						else{
 							//unreqconized command.
-							messageSlack("Sorry I don't understand that command. :frown:", req.getChannelName());
+							messageSlack("Sorry I don't understand that command. :frown:", req.getChannelID());
 						}
 						
 					}

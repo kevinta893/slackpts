@@ -51,7 +51,8 @@ public class Driver {
 		instance.registerCommand(new FortuneCmd());
 		instance.registerCommand(new CoinCmd());
 		instance.registerCommand(new NumberCmd());
-		
+		instance.registerCommand(new ObjectionCmd());
+		instance.registerCommand(new ColorCmd());
 		//start server
 		instance.startServer();
 	}

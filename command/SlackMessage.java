@@ -23,7 +23,10 @@ public class SlackMessage {
 	private String username;
 	private String user_icon;
 	private String user_icon_key;
+	
 	private boolean unfurl_links = false;
+	private boolean unfurl_media = false;
+	private boolean markdown = true;
 	
 	private LinkedList<SlackAttachment> attachments;
 
@@ -48,6 +51,8 @@ public class SlackMessage {
 		this.username = Config.getBotName();
 		setUserIcon(Config.getDefaultIconURL(), IconType.URL );
 		this.unfurl_links = false;
+		this.unfurl_media = false;
+		this.markdown = true;
 	}
 
 	
@@ -120,6 +125,17 @@ public class SlackMessage {
 	}
 	
 	
+	public void setUnfurlMedia(boolean unfurl_media) {
+		this.unfurl_media = unfurl_media;
+	}
+
+	
+
+	public void setMarkdown(boolean markdown) {
+		this.markdown = markdown;
+	}
+
+
 	public void addAttachment(SlackAttachment a){
 		attachments.add(a);
 	}
@@ -131,7 +147,9 @@ public class SlackMessage {
 				makePair("channel", channel) + "," +
 				makePair("username", username) + "," +
 				makePair(user_icon_key, user_icon) + "," +
-				makePair("unfurl_links", unfurl_links) + 
+				makePair("unfurl_links", unfurl_links) + "," + 
+				makePair("unfurl_media", unfurl_media) + "," + 
+				makePair("mrkdwn", markdown) + 
 				(attachments.size() > 0 ? ("," + makeArray("attachments", attachments)) : "") +		//add attachments array if not empty
 				"}";
 	}
@@ -254,7 +272,9 @@ public class SlackMessage {
 
 			this.shortField = false;
 		}
-
+		/** 
+		 * Optional flag indicating whether the `value` is short enough to be displayed side-by-side with other values
+        */
 		public void setShort(boolean yes){
 			this.shortField = yes;
 		}
@@ -349,12 +369,14 @@ public class SlackMessage {
                 sb.append('\\');
                 sb.append(c);
                 break;
+                
             case '/':
 //                if (b == '<') {
                     sb.append('\\');
 //                }
                 sb.append(c);
                 break;
+                
             case '\b':
                 sb.append("\\b");
                 break;

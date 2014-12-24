@@ -10,7 +10,7 @@ import server.WorkStream;
  */
 public final class Template extends Command {
 
-	private static final String COMMAND = "";
+	private static final String COMMAND = "/template";
 	
 
 	private String logMessage;
@@ -26,7 +26,7 @@ public final class Template extends Command {
 	public int doRequest(WorkStream ws, RequestStruct req) {
 		
 		ws.messageSlack(new SlackMessage("Hello World", req.getChannelID()));
-		logMessage = "Runtime errors or comments here";
+		logMessage = "Optional: Runtime errors or comments here. Leave null for nothing";
 		return 0;
 	}
 

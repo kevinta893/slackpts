@@ -126,9 +126,13 @@ public class RequestStruct {
 		int index = payload.indexOf(TEXT_TAG);
 
 		
+		
 		if (index >=0){
 			String raw = payload.substring(index + TEXT_TAG.length());
-
+	
+			//change all characters to orginal
+			raw = escapeEncode(raw);
+			
 			if (raw.indexOf("+") >=0){
 				return raw.split("\\+");
 			}
@@ -145,7 +149,18 @@ public class RequestStruct {
 	}
 	
 	
-	
+	/**
+	 * Escapes some characters sent by Slack.
+	 * @param s
+	 * @return
+	 */
+	private static String escapeEncode(String s){
+		String work = s;
+		work = work.replaceAll("%22", "\"");		//double-qoute
+		work = work.replaceAll("%27", "'");			//qoute
+		
+		return work;
+	}
 	
 	
 	//========================================================================
